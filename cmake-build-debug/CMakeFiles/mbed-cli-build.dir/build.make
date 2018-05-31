@@ -35,10 +35,10 @@ NULL=nul
 SHELL = cmd.exe
 
 # The CMake executable.
-CMAKE_COMMAND = "C:\Users\Victor van Wijhe\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\181.4445.84\bin\cmake\bin\cmake.exe"
+CMAKE_COMMAND = "C:\Users\Victor van Wijhe\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\181.4668.70\bin\cmake\bin\cmake.exe"
 
 # The command to remove a file.
-RM = "C:\Users\Victor van Wijhe\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\181.4445.84\bin\cmake\bin\cmake.exe" -E remove -f
+RM = "C:\Users\Victor van Wijhe\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\181.4668.70\bin\cmake\bin\cmake.exe" -E remove -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -56,7 +56,7 @@ include CMakeFiles\mbed-cli-build.dir\progress.make
 
 CMakeFiles\mbed-cli-build:
 	cd D:\School\HBO\HBO3\Semester_2\Project\Usain_Boat\UsainBoat
-	echo >nul && "C:\Users\Victor van Wijhe\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\181.4445.84\bin\cmake\bin\cmake.exe" -E echo "mbed compile --build BUILD/Debug --profile mbed-os/tools/profiles/debug.json"
+	echo >nul && "C:\Users\Victor van Wijhe\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\181.4668.70\bin\cmake\bin\cmake.exe" -E echo "mbed compile --build BUILD/Debug --profile mbed-os/tools/profiles/debug.json"
 	mbed compile --build BUILD/Debug --profile mbed-os/tools/profiles/debug.json
 	cd D:\School\HBO\HBO3\Semester_2\Project\Usain_Boat\UsainBoat\cmake-build-debug
 
