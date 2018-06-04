@@ -4,9 +4,9 @@
 
 int main()
 {
+  UsainBoat boat;
 
-  event_e event = E_INIT;
-  statemachine(event);
+  boat.run();
 
   return 0;
 }

@@ -1,109 +1,117 @@
 #include "UsainBoat.h"
-#include "mbed.h"
-#include "../../gps/src/usain_gps.cpp"
-#include "../../imu/src/usain_imu.cpp"
-#include "../../radio/src/usain_network.cpp"
-#include "../../rc_control/src/usain_control.cpp"
 
+void UsainBoat::run()
+{
+  // trigger initialize state. only after startup
+  state_event.set(E_NO);
 
-static state_e currentState = S_START;
+  while (true)
+  {
+    // not clearing the event flag will result in a loop in the statemachine
+    auto event = (event_e) state_event.wait_all(0, static_cast<uint32_t>(-1), false);
 
-Thread thread_gps;
-Thread thread_imu;
-Thread thread_radio;
-Thread thread_state;
+    switch (current_state)
+    {
+      case S_INIT:state_init();
+        break;
 
-EventQueue queue;
+      case S_WAIT_FOR_RADIO:
+        state_wait_for_radio(event);
+        break;
 
-void thread_function_gps();
-void thread_function_imu();
-void thread_function_radio();
-void thread_function_wait_for_message();
-void thread_function_follow();
-void thread_function_manual();
-void thread_function_relay();
+      case S_FOLLOW:
+        state_follow(event);
+        break;
 
-void statemachine(event_e event) {
-  state_e nextState = S_NO;
+      case S_MANUAL:
+        state_manual(event);
+        break;
 
-  switch(currentState) {
-    case S_START:
-      nextState = S_INIT;
-      break;
+      case S_RELAY:
+        state_relay(event);
+        break;
 
-    case S_INIT:
-      event = initialize();
-      nextState = S_WAIT_FOR_RADIO_MESSAGE;
-      break;
+      default:printf("Unknown state");
+        break;
+    }
 
-    case S_WAIT_FOR_RADIO_MESSAGE:
-      thread_state.start(thread_function_wait_for_message);
-
-
-      nextState = S_RELAY;
-      nextState = S_MANUAL;
-      nextState = S_FOLLOW;
-      break;
-
-    case S_FOLLOW:
-      thread_state.start(thread_function_follow);
-
-      nextState = S_WAIT_FOR_RADIO_MESSAGE;
-      break;
-
-    case S_MANUAL:
-      thread_state.start(thread_function_manual);
-      nextState = S_WAIT_FOR_RADIO_MESSAGE;
-      break;
-
-    case S_RELAY:
-      thread_state.start(thread_function_relay);
-      nextState = S_WAIT_FOR_RADIO_MESSAGE;
-      break;
-
-default:
-      printf("Unknown state");
-      break;
-  }
-  currentState = nextState;
-}
-
-event_e initialize() {
-  printf("Start of the statemachine");
-  thread_gps.start(thread_function_gps);
-  thread_imu.start(thread_function_imu);
-  thread_radio.start(thread_function_radio);
-
-
-  return E_READY;
-}
-
-
-void thread_function_gps(){
-  UsainGPS gps;
-  gps.init();
-
-  while(1){
-
-
-
+    current_state = next_state;
   }
 }
 
+void UsainBoat::state_init()
+{
+  status_led.set_pattern(UsainLED::LOADING);
 
-void thread_function_imu(){
-  UsainIMU imu;
-  imu.init();
-
-  while(1){
-
+  if (imu.init() < 0)
+  {
+    error("imu init failure\n");
   }
+
+  if (network.init() < 0)
+  {
+    error("usain network init failure\n");
+  }
+
+  if (gps.init() < 0)
+  {
+    error("usain gps init failure\n");
+  }
+
+  // register handlers
+  imu.register_on_collision(callback(this, &UsainBoat::on_collision_handler));
+  network.register_message_received(callback(this, &UsainBoat::on_message_received_handler));
+
+  next_state = S_WAIT_FOR_RADIO;
+  state_event.clear();
 }
 
-void thread_function_radio(){
-  UsainNetwork network;
-  network.init();
+void UsainBoat::state_wait_for_radio(event_e event)
+{
+  status_led.set_pattern(UsainLED::STANDBY);
+}
 
-  while(1){}
+void UsainBoat::state_manual(event_e event)
+{
+
+}
+
+void UsainBoat::state_follow(event_e event)
+{
+
+}
+
+void UsainBoat::state_relay(event_e event)
+{
+
+}
+
+// driver callbacks
+void UsainBoat::on_collision_handler()
+{
+  state_event.set(E_COLLISION);
+}
+void UsainBoat::on_message_received_handler(UsainNetworkMessage message)
+{
+//TODO check what the message is, message format is required
+
+  switch ()
+  {
+    case :
+
+      state_event.set(E_START_FOLLOW);
+      break;
+
+    case :
+
+      state_event.set(E_START_MANUAL);
+      break;
+
+    case :
+
+      state_event.set(E_START_RELAY);
+      break;
+
+  }
 }
 

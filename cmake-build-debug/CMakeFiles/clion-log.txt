@@ -1,4 +1,4 @@
-"C:\Users\Victor van Wijhe\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\181.4668.70\bin\cmake\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - NMake Makefiles" D:\School\HBO\HBO3\Semester_2\Project\Usain_Boat\UsainBoat
+"C:\Users\Victor van Wijhe\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\181.4445.84\bin\cmake\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - NMake Makefiles" D:\School\HBO\HBO3\Semester_2\Project\Usain_Boat\UsainBoat
 -- Add a local project.cmake file to add your own targets.
 -- Configuring done
 -- Generating done
