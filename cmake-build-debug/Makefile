@@ -10343,6 +10343,33 @@ mbed-os\targets\TARGET_STM\us_ticker_32b.c.s:
 	$(MAKE) -f CMakeFiles\blinky.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blinky.dir\mbed-os\targets\TARGET_STM\us_ticker_32b.c.s
 .PHONY : mbed-os\targets\TARGET_STM\us_ticker_32b.c.s
 
+src\PID.obj: src\PID.cpp.obj
+
+.PHONY : src\PID.obj
+
+# target to build an object file
+src\PID.cpp.obj:
+	$(MAKE) -f CMakeFiles\blinky.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blinky.dir\src\PID.cpp.obj
+.PHONY : src\PID.cpp.obj
+
+src\PID.i: src\PID.cpp.i
+
+.PHONY : src\PID.i
+
+# target to preprocess a source file
+src\PID.cpp.i:
+	$(MAKE) -f CMakeFiles\blinky.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blinky.dir\src\PID.cpp.i
+.PHONY : src\PID.cpp.i
+
+src\PID.s: src\PID.cpp.s
+
+.PHONY : src\PID.s
+
+# target to generate assembly for a file
+src\PID.cpp.s:
+	$(MAKE) -f CMakeFiles\blinky.dir\build.make /nologo -$(MAKEFLAGS) CMakeFiles\blinky.dir\src\PID.cpp.s
+.PHONY : src\PID.cpp.s
+
 src\UsainBoat.obj: src\UsainBoat.cpp.obj
 
 .PHONY : src\UsainBoat.obj
@@ -11541,6 +11568,9 @@ help:
 	@echo ... mbed-os/targets/TARGET_STM/us_ticker_32b.obj
 	@echo ... mbed-os/targets/TARGET_STM/us_ticker_32b.i
 	@echo ... mbed-os/targets/TARGET_STM/us_ticker_32b.s
+	@echo ... src/PID.obj
+	@echo ... src/PID.i
+	@echo ... src/PID.s
 	@echo ... src/UsainBoat.obj
 	@echo ... src/UsainBoat.i
 	@echo ... src/UsainBoat.s

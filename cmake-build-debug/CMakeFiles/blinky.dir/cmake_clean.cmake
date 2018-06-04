@@ -381,6 +381,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/blinky.dir/mbed-os/targets/TARGET_STM/us_ticker_16b.c.obj"
   "CMakeFiles/blinky.dir/mbed-os/targets/TARGET_STM/us_ticker_32b.c.obj"
   "CMakeFiles/blinky.dir/src/UsainBoat.cpp.obj"
+  "CMakeFiles/blinky.dir/src/PID.cpp.obj"
   "blinky.pdb"
   "blinky"
   "blinky.manifest"

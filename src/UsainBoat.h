@@ -9,11 +9,18 @@
 #include "../../radio/src/usain_network.h"
 #include "../../rc_control/src/usain_control.h"
 #include "../../rc_control/src/usain_led.h"
+#include "PID.h"
 
 typedef enum
 {
   NOERR
 } error_e;
+
+typedef enum
+{
+  Boat1,
+  Boat2
+} Boat_e;
 
 typedef enum
 {
@@ -45,6 +52,10 @@ class UsainBoat
 
   void state_relay(event_e event);
 
+  void state_relay_move();
+
+  void state_relay_stay();
+
   // driver callbacks
   void on_collision_handler();
   void on_message_received_handler();
@@ -59,7 +70,13 @@ class UsainBoat
   UsainIMU imu;
   UsainLED status_led;
 
+  Thread state_thread;
+
+  Boat_e Boat;
+
   AdafruitUltimateGPS::gprmc_data_t coordinates_other_boat;
+
+
 };
 
 #endif

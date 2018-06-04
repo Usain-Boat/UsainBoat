@@ -1054,7 +1054,7 @@ ADD_EXECUTABLE(blinky
         mbed-os/targets/TARGET_STM/us_ticker_16b.c
         mbed-os/targets/TARGET_STM/us_ticker_32b.c
         mbed_config.h
-        src/UsainBoat.cpp src/UsainBoat.h)
+        src/UsainBoat.cpp src/UsainBoat.h src/PID.cpp src/PID.h)
 SET_TARGET_PROPERTIES(blinky PROPERTIES ENABLE_EXPORTS 1)
 # add syslibs dependencies to create the correct linker order
 TARGET_LINK_LIBRARIES(blinky -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys)
