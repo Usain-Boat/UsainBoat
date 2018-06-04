@@ -14,7 +14,7 @@
 #include "../../rc_control/src/usain_led.h"
 
 
-class PID
+class pid
 {
  public:
   // Kp -  proportional gain
@@ -23,11 +23,11 @@ class PID
   // dt -  loop interval time
   // max - maximum value of manipulated variable
   // min - minimum value of manipulated variable
-  PID( double dt, double max, double min, double Kp, double Kd, double Ki );
+  pid( double dt, double max, double min, double Kp, double Kd, double Ki );
 
   // Returns the manipulated variable given a setpoint and current process value
   float calculate( float setpoint, float pv );
-  ~PID();
+  ~pid();
 
  private:
   float _dt;

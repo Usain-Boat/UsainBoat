@@ -381,17 +381,17 @@ HAL_StatusTypeDef HAL_HCD_HC_SubmitRequest(HCD_HandleTypeDef *hhcd,
     if((token == 1) && (direction == 0)) /*send data */
     {
       if (length == 0)
-      { /* For Status OUT stage, Length==0, Status Out PID = 1 */
+      { /* For Status OUT stage, Length==0, Status Out pid = 1 */
         hhcd->hc[ch_num].toggle_out = 1;
       }
       
       /* Set the Data Toggle bit as per the Flag */
       if (hhcd->hc[ch_num].toggle_out == 0)
-      { /* Put the PID 0 */
+      { /* Put the pid 0 */
         hhcd->hc[ch_num].data_pid = HC_PID_DATA0;    
       }
       else
-      { /* Put the PID 1 */
+      { /* Put the pid 1 */
         hhcd->hc[ch_num].data_pid = HC_PID_DATA1;
       }
       if(hhcd->hc[ch_num].urb_state  != URB_NOTREADY)
@@ -419,11 +419,11 @@ HAL_StatusTypeDef HAL_HCD_HC_SubmitRequest(HCD_HandleTypeDef *hhcd,
     {
       /* Set the Data Toggle bit as per the Flag */
       if ( hhcd->hc[ch_num].toggle_out == 0)
-      { /* Put the PID 0 */
+      { /* Put the pid 0 */
         hhcd->hc[ch_num].data_pid = HC_PID_DATA0;    
       }
       else
-      { /* Put the PID 1 */
+      { /* Put the pid 1 */
         hhcd->hc[ch_num].data_pid = HC_PID_DATA1;
       }
       if(hhcd->hc[ch_num].urb_state  != URB_NOTREADY)
@@ -449,11 +449,11 @@ HAL_StatusTypeDef HAL_HCD_HC_SubmitRequest(HCD_HandleTypeDef *hhcd,
     {
       /* Set the Data Toggle bit as per the Flag */
       if ( hhcd->hc[ch_num].toggle_out == 0)
-      { /* Put the PID 0 */
+      { /* Put the pid 0 */
         hhcd->hc[ch_num].data_pid = HC_PID_DATA0;    
       }
       else
-      { /* Put the PID 1 */
+      { /* Put the pid 1 */
         hhcd->hc[ch_num].data_pid = HC_PID_DATA1;
       }
     }

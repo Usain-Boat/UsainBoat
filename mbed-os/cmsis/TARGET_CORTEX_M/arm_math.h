@@ -4897,7 +4897,7 @@ void arm_rfft_fast_f32(
 #if defined (ARM_MATH_DSP)
     __SIMD32_TYPE *vstate;
 
-    /* Implementation of PID controller */
+    /* Implementation of pid controller */
 
     /* acc = A0 * x[n]  */
     acc = (q31_t) __SMUAD((uint32_t)S->A0, (uint32_t)in);

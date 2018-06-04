@@ -13,7 +13,6 @@ void UsainBoat::run()
     switch (current_state)
     {
       case S_INIT:
-
         state_init();
         break;
 
@@ -33,7 +32,8 @@ void UsainBoat::run()
         state_relay(event);
         break;
 
-      default:printf("Unknown state");
+      default:
+        printf("Unknown state");
         break;
     }
 
@@ -43,9 +43,7 @@ void UsainBoat::run()
 
 void UsainBoat::state_init()
 {
-  status_led.set_pattern(UsainLED::LOADING);
-
-  DigitalIn determine_boat(PA_4);
+  UsainLED::set_pattern(UsainLED::LOADING);
 
   if (imu.init() < 0)
   {
@@ -62,132 +60,139 @@ void UsainBoat::state_init()
     error("usain gps init failure\n");
   }
 
-  Boat = determine_boat ? Boat1 : Boat2;
-
+  DigitalIn determine_boat(PA_4);
+  boat_id = determine_boat ? BOAT1 : BOAT2;
 
   // register handlers
   imu.register_on_collision(callback(this, &UsainBoat::on_collision_handler));
-  network.register_message_received(Callback(this, &UsainNetworkMessage::get_data));
+  network.register_message_received(callback(this, &UsainBoat::on_message_received_handler));
 
   next_state = S_WAIT_FOR_RADIO;
-  state_event.clear();
 }
 
 void UsainBoat::state_wait_for_radio(event_e event)
 {
-  status_led.set_pattern(UsainLED::STANDBY);
+  UsainLED::set_pattern(UsainLED::STANDBY);
 
+  state_event.clear();
 }
 
 void UsainBoat::state_manual(event_e event)
 {
-  status_led.set_pattern(UsainLED::);
+  UsainLED::set_pattern(UsainLED::INTERACTIVE);
   control.set_mode(UsainControl::MODE_RC);
+  state_event.clear();
 }
 
 void UsainBoat::state_follow(event_e event)
+{
+  follow_thread.start(callback(this, &UsainBoat::follow_handler));
+
+  state_event.clear();
+}
+
+void UsainBoat::state_relay(event_e event)
+{
+  relay_thread.start(callback(this, &UsainBoat::relay_handler));
+
+  status_led.set_color(UsainLED::COLOR_YELLOW);
+
+  if (boat_id == BOAT1)
+  {
+    state_thread.start(relay_handler);
+  } else
+  {
+    state_thread.start(follow_handler);
+  }
+
+  state_event.clear();
+}
+
+void UsainBoat::relay_handler()
+{
+  control.set_mode(control.MODE_RC);
+}
+
+void UsainBoat::follow_handler()
 {
   bool exit = false;
   float angle;
   float distance;
   float standard_distance;
 
-  PID pid_angle = PID(0.1, 100, -100, 0.1, 0.01, 0.5);
-  PID pid_distance =  PID(0.1, 100, -100, 0.1, 0.01, 0.5);
+  pid pid_angle = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
+  pid pid_distance = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
 
   control.set_mode(UsainControl::MODE_UC);
 
-  status_led.set_color(UsainLED::COLOR_GREEN);
+  UsainLED::set_color(UsainLED::COLOR_GREEN);
 
-  while(!exit)
+  while (!exit)
   {
     standard_distance = 20;
 
-    if(gps.get_distance_centimeter(longitude, lattitude, &angle, %distance) < 0 )
+    if (gps.calculate_distance(longitude, lattitude, &angle, % distance) < 0 )
     {
 
     }
 
-    if ( angle <= 0)
+    if (angle <= 0)
     {
       control.set_motor(control.MOTOR_RIGHT,
-                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance) * pid_angle.calculate(0, angle)));
+                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+                            * pid_angle.calculate(0, angle)));
       control.set_motor(control.MOTOR_LEFT,
-                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance) / pid_angle.calculate(0, angle)));
-    }else
+                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+                            / pid_angle.calculate(0, angle)));
+    } else
     {
       control.set_motor(control.MOTOR_RIGHT,
-                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance) / pid_angle.calculate(0, angle)));
+                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+                            / pid_angle.calculate(0, angle)));
       control.set_motor(control.MOTOR_LEFT,
-                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance) * pid_angle.calculate(0, angle)));
+                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+                            * pid_angle.calculate(0, angle)));
     }
 
     exit = true;
-    5
   }
 }
-
-void UsainBoat::state_relay(event_e event)
-{
-  status_led.set_color(UsainLED::COLOR_YELLOW);
-
-  if ( Boat ==  Boat1){
-    state_thread.start(state_relay_move);
-  }else{
-    state_thread.start(state_relay_stay);
-  }
-
-
-}
-
-void UsainBoat::state_relay_move()
-{
-  control.set_mode(control.MODE_RC);
-
-  auto event = (event_e) state_event.wait_all(E_COLLISION, static_cast<uint32_t>(-1), false);
-
-}
-
-void UsainBoat::state_relay_stay()
-{
-
-}
-
-
-
-
-
-
 
 // driver callbacks
 void UsainBoat::on_collision_handler()
 {
   state_event.set(E_COLLISION);
 }
-void UsainBoat::on_message_received_handler()
+
+void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, UsainNetwork *network)
 {
-//TODO check what the message is, message format is required
-
-  switch ()
+  if(message.get_destination() != boat_id)
   {
-    case :
+    // message was not meant for this boat
+    return;
+  }
 
-      state_event.set(E_START_FOLLOW);
-      next_state = S_FOLLOW;
+  switch (message.get_type())
+  {
+    case UsainNetworkMessage::GET:
+
       break;
 
-    case :
+    case UsainNetworkMessage::POST:
 
-      state_event.set(E_START_MANUAL);
-      next_state = S_MANUAL;
       break;
 
-    case :
+    case UsainNetworkMessage::BCST:
 
-      state_event.set(E_START_RELAY);
-      next_state = S_RELAY;
       break;
 
+    case UsainNetworkMessage::RESP:
+
+      break;
+
+    case UsainNetworkMessage::ERR:
+
+      break;
   }
 }
 

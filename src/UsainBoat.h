@@ -9,7 +9,7 @@
 #include "../../radio/src/usain_network.h"
 #include "../../rc_control/src/usain_control.h"
 #include "../../rc_control/src/usain_led.h"
-#include "PID.h"
+#include "pid.h"
 
 typedef enum
 {
@@ -18,9 +18,10 @@ typedef enum
 
 typedef enum
 {
-  Boat1,
-  Boat2
-} Boat_e;
+  HOST,
+  BOAT1,
+  BOAT2
+} boat_id_t;
 
 typedef enum
 {
@@ -52,13 +53,15 @@ class UsainBoat
 
   void state_relay(event_e event);
 
-  void state_relay_move();
+  void relay_handler();
 
-  void state_relay_stay();
+  void follow_handler();
 
   // driver callbacks
   void on_collision_handler();
-  void on_message_received_handler();
+  void on_message_received_handler(const UsainNetworkMessage &message, UsainNetwork *network);
+
+  boat_id_t boat_id;
 
   EventFlags state_event;
   state_e current_state;
@@ -71,12 +74,8 @@ class UsainBoat
   UsainLED status_led;
 
   Thread state_thread;
-
-  Boat_e Boat;
-
-  AdafruitUltimateGPS::gprmc_data_t coordinates_other_boat;
-
-
+  Thread follow_thread;
+  Thread relay_thread;
 };
 
 #endif

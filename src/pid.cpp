@@ -3,21 +3,21 @@
 //
 
 
-#include "PID.h"
+#include "pid.h"
 
-PID::PID(double dt, double max, double min, double Kp, double Kd, double Ki)
+pid::pid(double dt, double max, double min, double Kp, double Kd, double Ki)
 {
-  PID::_dt = dt;
-  PID::_max = max;
-  PID::_min = min;
-  PID::_Kp = Kp;
-  PID::_Kd = Kd;
-  PID::_Ki = Ki;
+  pid::_dt = dt;
+  pid::_max = max;
+  pid::_min = min;
+  pid::_Kp = Kp;
+  pid::_Kd = Kd;
+  pid::_Ki = Ki;
 
 }
 
 
-float PID::calculate(float setpoint, float pv)
+float pid::calculate(float setpoint, float pv)
 {
   // Calculate error
   float error = setpoint - pv;

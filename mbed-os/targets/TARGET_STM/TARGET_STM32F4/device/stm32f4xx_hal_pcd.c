@@ -982,7 +982,7 @@ HAL_StatusTypeDef HAL_PCD_EP_Open(PCD_HandleTypeDef *hpcd, uint8_t ep_addr, uint
     /* Assign a Tx FIFO */
     ep->tx_fifo_num = ep->num;
   }
-  /* Set initial data PID. */
+  /* Set initial data pid. */
   if (ep_type == EP_TYPE_BULK )
   {
     ep->data_pid_start = 0U;
