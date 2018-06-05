@@ -4,11 +4,11 @@
 #include "mbed.h"
 
 // TODO: add files to project so it can compile
-#include "../../gps/src/usain_gps.h"
-#include "../../imu/src/usain_imu.h"
-#include "../../radio/src/usain_network.h"
-#include "../../rc_control/src/usain_control.h"
-#include "../../rc_control/src/usain_led.h"
+#include "usain_gps.h"
+#include "usain_imu.h"
+#include "usain_network.h"
+#include "usain_control.h"
+#include "usain_led.h"
 #include "pid.h"
 
 typedef enum

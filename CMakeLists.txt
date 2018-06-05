@@ -93,7 +93,10 @@ ADD_DEFINITIONS(
         -D__MBED__=1
 )
 INCLUDE_DIRECTORIES(
-        inc/
+        lib/control
+        lib/gps
+        lib/imu
+        lib/radio
         mbed-os/targets/TARGET_STM/TARGET_STM32F4/device
         mbed-os/targets/TARGET_STM/TARGET_STM32F4/TARGET_STM32F446xE/device/TOOLCHAIN_GCC_ARM
         mbed-os/targets/TARGET_STM/TARGET_STM32F4/TARGET_STM32F446xE/device
