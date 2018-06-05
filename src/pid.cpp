@@ -13,9 +13,10 @@ pid::pid(double dt, double max, double min, double Kp, double Kd, double Ki)
   pid::_Kp = Kp;
   pid::_Kd = Kd;
   pid::_Ki = Ki;
-
 }
 
+pid::~pid()
+= default;
 
 float pid::calculate(float setpoint, float pv)
 {
@@ -47,4 +48,3 @@ float pid::calculate(float setpoint, float pv)
 
   return output;
 }
-

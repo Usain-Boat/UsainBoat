@@ -1,6 +1,6 @@
 #include "UsainBoat.h"
 
-void UsainBoat::run()
+void UsainBoat::start()
 {
   // trigger initialize state. only after startup
   state_event.set(E_NO);
@@ -8,7 +8,7 @@ void UsainBoat::run()
   while (true)
   {
     // not clearing the event flag will result in a loop in the statemachine
-    auto event = (event_e) state_event.wait_all(0, static_cast<uint32_t>(-1), false);
+    event_e event = (event_e) state_event.wait_all(0, static_cast<uint32_t>(-1), false);
 
     switch (current_state)
     {
@@ -95,16 +95,6 @@ void UsainBoat::state_relay(event_e event)
 {
   relay_thread.start(callback(this, &UsainBoat::relay_handler));
 
-  status_led.set_color(UsainLED::COLOR_YELLOW);
-
-  if (boat_id == BOAT1)
-  {
-    state_thread.start(relay_handler);
-  } else
-  {
-    state_thread.start(follow_handler);
-  }
-
   state_event.clear();
 }
 
@@ -131,10 +121,10 @@ void UsainBoat::follow_handler()
   {
     standard_distance = 20;
 
-    if (gps.calculate_distance(longitude, lattitude, &angle, % distance) < 0 )
-    {
-
-    }
+//    if (gps.calculate_distance(longitude, lattitude, &angle, % distance) < 0 )
+//    {
+//
+//    }
 
     if (angle <= 0)
     {
@@ -166,7 +156,7 @@ void UsainBoat::on_collision_handler()
 
 void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, UsainNetwork *network)
 {
-  if(message.get_destination() != boat_id)
+  if (message.get_destination() != boat_id)
   {
     // message was not meant for this boat
     return;
@@ -195,4 +185,3 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
       break;
   }
 }
-

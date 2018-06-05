@@ -3,7 +3,6 @@
 
 #include "mbed.h"
 
-// TODO: add files to project so it can compile
 #include "usain_gps.h"
 #include "usain_imu.h"
 #include "usain_network.h"
@@ -39,7 +38,7 @@ typedef enum
 class UsainBoat
 {
  public:
-  void run();
+  void start();
 
  private:
   // state handlers

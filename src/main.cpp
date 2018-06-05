@@ -1,12 +1,11 @@
 #include "mbed.h"
-#include "UsainBoat.cpp"
-
+#include "UsainBoat.h"
 
 int main()
 {
   UsainBoat boat;
 
-  boat.run();
+  boat.start();
 
   return 0;
 }

@@ -27,6 +27,7 @@ class pid
 
   // Returns the manipulated variable given a setpoint and current process value
   float calculate( float setpoint, float pv );
+
   ~pid();
 
  private:
