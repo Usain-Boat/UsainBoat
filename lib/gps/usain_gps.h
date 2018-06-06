@@ -26,10 +26,17 @@ public:
     void calculate_distance(double dest_latitude, double dest_longitude, double *distance_cm,
                             double *bearing_degrees);
 
+    void on_new_message(const Callback<void()> &callback)
+    {
+        _collision_callback = callback;
+    }
+
 
     bool data_received();
 
 private:
+    Callback<void()>  _collision_callback;
+
     void update();
 
     Thread _update;

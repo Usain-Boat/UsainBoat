@@ -65,6 +65,7 @@ class UsainBoat
   // driver callbacks
   void on_collision_handler();
   void on_message_received_handler(const UsainNetworkMessage &message, UsainNetwork *network);
+  void on_new_gps_data_handler();
 
   boat_id_t boat_id;
 

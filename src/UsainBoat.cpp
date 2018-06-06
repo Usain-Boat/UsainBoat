@@ -1,3 +1,5 @@
+#include <string>
+#include <vector>
 #include "UsainBoat.h"
 
 void UsainBoat::start()
@@ -66,6 +68,7 @@ void UsainBoat::state_init()
   // register handlers
   imu.register_on_collision(callback(this, &UsainBoat::on_collision_handler));
   network.register_message_received(callback(this, &UsainBoat::on_message_received_handler));
+  gps.on_new_message(callback(this, &UsainBoat::on_new_gps_data_handler));
 
   next_state = S_WAIT_FOR_RADIO;
 }
@@ -86,7 +89,6 @@ void UsainBoat::state_manual(event_e event)
   UsainLED::set_pattern(UsainLED::INTERACTIVE);
   control.set_mode(UsainControl::MODE_RC);
   state_event.clear();
-
 }
 
 void UsainBoat::state_follow(event_e event)
@@ -94,11 +96,10 @@ void UsainBoat::state_follow(event_e event)
   switch(event){
     case E_START_FOLLOW :
       follow_thread.start(callback(this, &UsainBoat::follow_handler));
-      thread_id = follow_thread.gettid();
       break;
 
     case E_WAIT_FOR_NEXT_MESSAGE :
-      osSignalSet(thread_id, E_WAIT_FOR_NEXT_MESSAGE);
+      follow_thread.signal_set(E_WAIT_FOR_NEXT_MESSAGE);
       next_state = S_WAIT_FOR_RADIO;
       break;
 
@@ -109,7 +110,6 @@ void UsainBoat::state_follow(event_e event)
   }
 
   state_event.clear();
-
 }
 
 void UsainBoat::state_relay(event_e event)
@@ -118,10 +118,10 @@ void UsainBoat::state_relay(event_e event)
   {
     case E_START_RELAY:
       relay_thread.start(callback(this, &UsainBoat::relay_handler));
-      thread_id = relay_thread.gettid();
       break;
 
     case E_COLLISION:
+      relay_thread.signal_set(E_COLLISION);
       osSignalSet(thread_id, E_COLLISION);
       break;
 
@@ -144,8 +144,6 @@ void UsainBoat::relay_handler()
   bool move = false;
   bool exit = false;
 
-  event_e event;
-
   if(boat_id == BOAT1){
     move = true;
   }
@@ -161,7 +159,7 @@ void UsainBoat::relay_handler()
       control.set_motor(control.MOTOR_RIGHT, 0);
     }
 
-    osEvent v = osSignalWait(0, osWaitForever);
+    osEvent v = relay_thread.signal_wait(0, osWaitForever);
 
     if(v.value.signals == E_COLLISION){
       move = !move;
@@ -212,7 +210,7 @@ void UsainBoat::follow_handler()
                               * pid_angle.calculate(0, angle)));
       }
 
-      osEvent v = osSignalWait(0, 5);
+      osEvent v = follow_thread.signal_wait(0, 5);
 
       if (v.value.signals == E_NEW_GPS_DATA)
       {
@@ -233,6 +231,11 @@ void UsainBoat::on_collision_handler()
   state_event.set(E_COLLISION);
 }
 
+void UsainBoat::on_new_gps_data_handler()
+{
+  state_event.set(E_NEW_GPS_DATA);
+}
+
 void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, UsainNetwork *network)
 {
   if (message.get_destination() != boat_id)
@@ -240,6 +243,9 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
     // message was not meant for this boat
     return;
   }
+
+  const uint8_t *data = message.get_data();
+  string data_string;
 
   switch (message.get_type())
   {
@@ -257,6 +263,18 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
 
     case UsainNetworkMessage::RESP:
 
+      for (int i = 0; i < 246; i++)
+      {
+        data_string.push_back(data[i]);
+      }
+      if (data_string.find("gps")){
+        if (coor_other_boat.longitude == 1.0 || coor_other_boat.latitude == 1.0)
+        {
+          coor_other_boat.longitude = 1.0;
+          coor_other_boat.latitude = 1.0;
+          state_event.set(E_NEW_GPS_DATA);
+        }
+      }
       break;
 
     case UsainNetworkMessage::ERR:
@@ -264,6 +282,8 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
       break;
   }
 }
+
+
 
 
 

@@ -92,6 +92,11 @@ void UsainGPS::update() {
     while (1)
     {
         _gps.parsedata();
+        if (_gps.ReceievedNewGPRMC())
+        {
+            _collision_callback.call();
+        }
+
     }
 }
 

@@ -49,11 +49,6 @@ uint8_t* Databuffer::operator[](const int index) {
     return &_data[index];
 }
 
-Databuffer::~Databuffer()
-{
-
-}
-
 
 
 
