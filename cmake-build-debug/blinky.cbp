@@ -85,7 +85,11 @@
 					<Add option="-D__FPU_PRESENT=1"/>
 					<Add option="-D__MBED_CMSIS_RTOS_CM"/>
 					<Add option="-D__MBED__=1"/>
-					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/inc"/>
+					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/lib/control"/>
+					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/lib/gps"/>
+					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/lib/imu"/>
+					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/lib/radio"/>
+					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/lib/PID"/>
 					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/mbed-os/targets/TARGET_STM/TARGET_STM32F4/device"/>
 					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/mbed-os/targets/TARGET_STM/TARGET_STM32F4/TARGET_STM32F446xE/device/TOOLCHAIN_GCC_ARM"/>
 					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/mbed-os/targets/TARGET_STM/TARGET_STM32F4/TARGET_STM32F446xE/device"/>
@@ -244,7 +248,11 @@
 					<Add option="-D__FPU_PRESENT=1"/>
 					<Add option="-D__MBED_CMSIS_RTOS_CM"/>
 					<Add option="-D__MBED__=1"/>
-					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/inc"/>
+					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/lib/control"/>
+					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/lib/gps"/>
+					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/lib/imu"/>
+					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/lib/radio"/>
+					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/lib/PID"/>
 					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/mbed-os/targets/TARGET_STM/TARGET_STM32F4/device"/>
 					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/mbed-os/targets/TARGET_STM/TARGET_STM32F4/TARGET_STM32F446xE/device/TOOLCHAIN_GCC_ARM"/>
 					<Add directory="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/mbed-os/targets/TARGET_STM/TARGET_STM32F4/TARGET_STM32F446xE/device"/>
@@ -2977,12 +2985,6 @@
 			<Option target="blinky"/>
 		</Unit>
 		<Unit filename="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/src/main.cpp">
-			<Option target="blinky"/>
-		</Unit>
-		<Unit filename="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/src/pid.cpp">
-			<Option target="blinky"/>
-		</Unit>
-		<Unit filename="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/src/pid.h">
 			<Option target="blinky"/>
 		</Unit>
 		<Unit filename="D:/School/HBO/HBO3/Semester_2/Project/Usain_Boat/UsainBoat/CMakeLists.txt">

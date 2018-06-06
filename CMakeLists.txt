@@ -97,6 +97,7 @@ INCLUDE_DIRECTORIES(
         lib/gps
         lib/imu
         lib/radio
+        lib/PID
         mbed-os/targets/TARGET_STM/TARGET_STM32F4/device
         mbed-os/targets/TARGET_STM/TARGET_STM32F4/TARGET_STM32F446xE/device/TOOLCHAIN_GCC_ARM
         mbed-os/targets/TARGET_STM/TARGET_STM32F4/TARGET_STM32F446xE/device
@@ -1057,7 +1058,7 @@ ADD_EXECUTABLE(blinky
         mbed-os/targets/TARGET_STM/us_ticker_16b.c
         mbed-os/targets/TARGET_STM/us_ticker_32b.c
         mbed_config.h
-        src/UsainBoat.cpp src/UsainBoat.h src/pid.cpp src/pid.h)
+        src/UsainBoat.cpp src/UsainBoat.h)
 SET_TARGET_PROPERTIES(blinky PROPERTIES ENABLE_EXPORTS 1)
 # add syslibs dependencies to create the correct linker order
 TARGET_LINK_LIBRARIES(blinky -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys)

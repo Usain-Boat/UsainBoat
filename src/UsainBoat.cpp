@@ -74,6 +74,10 @@ void UsainBoat::state_wait_for_radio(event_e event)
 {
   UsainLED::set_pattern(UsainLED::STANDBY);
 
+  control.set_mode(UsainControl::MODE_UC);
+  control.set_motor(UsainControl::MOTOR_RIGHT, 0);
+  control.set_motor(UsainControl::MOTOR_LEFT, 0);
+
   state_event.clear();
 }
 
@@ -82,69 +86,144 @@ void UsainBoat::state_manual(event_e event)
   UsainLED::set_pattern(UsainLED::INTERACTIVE);
   control.set_mode(UsainControl::MODE_RC);
   state_event.clear();
+
 }
 
 void UsainBoat::state_follow(event_e event)
 {
-  follow_thread.start(callback(this, &UsainBoat::follow_handler));
+  switch(event){
+    case E_START_FOLLOW :
+      follow_thread.start(callback(this, &UsainBoat::follow_handler));
+      thread_id = follow_thread.gettid();
+      break;
+
+    case E_WAIT_FOR_NEXT_MESSAGE :
+      osSignalSet(thread_id, E_WAIT_FOR_NEXT_MESSAGE);
+      next_state = S_WAIT_FOR_RADIO;
+      break;
+
+    default:
+      // do nothing
+      break;
+
+  }
 
   state_event.clear();
+
 }
 
 void UsainBoat::state_relay(event_e event)
 {
-  relay_thread.start(callback(this, &UsainBoat::relay_handler));
+  switch(event)
+  {
+    case E_START_RELAY:
+      relay_thread.start(callback(this, &UsainBoat::relay_handler));
+      thread_id = relay_thread.gettid();
+      break;
+
+    case E_COLLISION:
+      osSignalSet(thread_id, E_COLLISION);
+      break;
+
+    case E_WAIT_FOR_NEXT_MESSAGE:
+      osSignalSet(thread_id, E_WAIT_FOR_NEXT_MESSAGE);
+      next_state = S_WAIT_FOR_RADIO;
+      break;
+
+    default:
+      // do nothing
+      break;
+
+  }
 
   state_event.clear();
 }
 
 void UsainBoat::relay_handler()
 {
-  control.set_mode(control.MODE_RC);
+  bool move = false;
+  bool exit = false;
+
+  event_e event;
+
+  if(boat_id == BOAT1){
+    move = true;
+  }
+
+  while(!exit){
+
+    if(move){
+      control.set_mode(control.MODE_RC);
+
+    }else{
+      control.set_mode(control.MODE_UC);
+      control.set_motor(control.MOTOR_LEFT, 0);
+      control.set_motor(control.MOTOR_RIGHT, 0);
+    }
+
+    osEvent v = osSignalWait(0, osWaitForever);
+
+    if(v.value.signals == E_COLLISION){
+      move = !move;
+    }
+    if(v.value.signals == E_WAIT_FOR_NEXT_MESSAGE){
+      exit = true;
+    }
+  }
 }
 
 void UsainBoat::follow_handler()
 {
   bool exit = false;
-  float angle;
-  float distance;
-  float standard_distance;
-
-  pid pid_angle = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
-  pid pid_distance = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
-
-  control.set_mode(UsainControl::MODE_UC);
+  double angle = 0;
+  double distance = 0;
 
   UsainLED::set_color(UsainLED::COLOR_GREEN);
 
-  while (!exit)
+
+
+  if (boat_id == BOAT1){
+    control.set_mode(UsainControl::MODE_RC);
+  }else
   {
-    standard_distance = 20;
 
-//    if (gps.calculate_distance(longitude, lattitude, &angle, % distance) < 0 )
-//    {
-//
-//    }
+    pid pid_angle = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
+    pid pid_distance = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
 
-    if (angle <= 0)
+    control.set_mode(UsainControl::MODE_UC);
+
+    while (!exit)
     {
-      control.set_motor(control.MOTOR_RIGHT,
-                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-                            * pid_angle.calculate(0, angle)));
-      control.set_motor(control.MOTOR_LEFT,
-                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-                            / pid_angle.calculate(0, angle)));
-    } else
-    {
-      control.set_motor(control.MOTOR_RIGHT,
-                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-                            / pid_angle.calculate(0, angle)));
-      control.set_motor(control.MOTOR_LEFT,
-                        static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-                            * pid_angle.calculate(0, angle)));
+      if (angle <= 0)
+      {
+        control.set_motor(control.MOTOR_RIGHT,
+                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+                              * pid_angle.calculate(0, angle)));
+        control.set_motor(control.MOTOR_LEFT,
+                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+                              / pid_angle.calculate(0, angle)));
+      } else
+      {
+        control.set_motor(control.MOTOR_RIGHT,
+                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+                              / pid_angle.calculate(0, angle)));
+        control.set_motor(control.MOTOR_LEFT,
+                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+                              * pid_angle.calculate(0, angle)));
+      }
+
+      osEvent v = osSignalWait(0, 5);
+
+      if (v.value.signals == E_NEW_GPS_DATA)
+      {
+        gps.calculate_distance(coor_other_boat.latitude, coor_other_boat.longitude, &distance, &angle);
+      }
+
+      if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE)
+      {
+        exit = true;
+      }
     }
-
-    exit = true;
   }
 }
 
@@ -185,3 +264,6 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
       break;
   }
 }
+
+
+
