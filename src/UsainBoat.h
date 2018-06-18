@@ -35,9 +35,9 @@ typedef enum
   E_COLLISION, E_NEW_GPS_DATA
 } event_e;
 
-struct other_coordinates{
-  double latitude;
-  double longitude;
+struct _coordinates{
+  float latitude;
+  float longitude;
 };
 
 
@@ -84,7 +84,10 @@ class UsainBoat
   Thread relay_thread;
   osThreadId thread_id;
 
-  other_coordinates coor_other_boat;
+  _coordinates coor_boat;
+  _coordinates coor_other_boat;
+
+  uint8_t current_mode;
 
 };
 

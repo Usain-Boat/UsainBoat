@@ -70,7 +70,7 @@ class UsainNetworkMessage
 
   void add_parameter(char *name, float value);
 
-  int get_paramaters(UsainNetworkMessage::paramater_t *dest, uint8_t size);
+  int get_paramaters(UsainNetworkMessage::paramater_t *dest, uint8_t size) const;
 
   void from_byte_array(uint8_t src[], uint8_t size);
 

@@ -113,7 +113,7 @@ void UsainNetworkMessage::add_parameter(char *name, float value)
   add_parameter(name, buffer);
 }
 
-int UsainNetworkMessage::get_paramaters(UsainNetworkMessage::paramater_t *dest, uint8_t size)
+int UsainNetworkMessage::get_paramaters(UsainNetworkMessage::paramater_t *dest, uint8_t size) const
 {
   char *str = reinterpret_cast<char *>(_current_message.data);
   char *key_value;
