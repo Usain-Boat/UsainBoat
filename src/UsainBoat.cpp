@@ -4,7 +4,7 @@
 
 static UsainLED status_led;
 
-UsainBoat::UsainBoat() : determine_boat(PA_7)
+UsainBoat::UsainBoat() : determine_boat(A1)
 {
   imu = new UsainIMU();
   network = new UsainNetwork();
@@ -79,7 +79,7 @@ void UsainBoat::state_init()
 //    error("gps init failure\n");
 //  }
 
-  boat_id = determine_boat ? BOAT1 : BOAT2;
+  boat_id = determine_boat == 0 ? BOAT1 : BOAT2;
 
   printf("== boat ID: %d\n", boat_id);
 
@@ -116,7 +116,6 @@ void UsainBoat::state_wait_for_radio(event_e event)
       break;
 
     default:
-      printf("unkown event\n");
       break;
   }
 
@@ -141,7 +140,6 @@ void UsainBoat::state_manual(event_e event)
       break;
 
     default:
-      printf("unkown state\n");
       break;
 
   }
@@ -174,7 +172,6 @@ void UsainBoat::state_follow(event_e event)
       break;
 
     default:
-      // do nothing
       break;
   }
 
@@ -208,7 +205,6 @@ void UsainBoat::state_relay(event_e event)
       break;
 
     default:
-      // do nothing
       break;
 
   }
@@ -270,43 +266,43 @@ void UsainBoat::follow_handler()
   }else
   {
 
-    pid pid_angle = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
-    pid pid_distance = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
-
-    control->set_mode(UsainControl::MODE_UC);
-
-    while (!exit)
-    {
-      if (angle <= 0)
-      {
-        control->set_motor(control->MOTOR_RIGHT,
-                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-                              * pid_angle.calculate(0, angle)));
-        control->set_motor(control->MOTOR_LEFT,
-                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-                              / pid_angle.calculate(0, angle)));
-      } else
-      {
-        control->set_motor(control->MOTOR_RIGHT,
-                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-                              / pid_angle.calculate(0, angle)));
-        control->set_motor(control->MOTOR_LEFT,
-                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-                              * pid_angle.calculate(0, angle)));
-      }
-
-      osEvent v = follow_thread.signal_wait(0, 5);
-
-      if (v.value.signals == E_NEW_GPS_DATA)
-      {
-        gps->calculate_distance(coor_other_boat.latitude, coor_other_boat.longitude, &distance, &angle);
-      }
-
-      if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL || v.value.signals == E_START_RELAY)
-      {
-        exit = true;
-      }
-    }
+//    pid pid_angle = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
+//    pid pid_distance = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
+//
+//    control->set_mode(UsainControl::MODE_UC);
+//
+//    while (!exit)
+//    {
+//      if (angle <= 0)
+//      {
+//        control->set_motor(control->MOTOR_RIGHT,
+//                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+//                              * pid_angle.calculate(0, angle)));
+//        control->set_motor(control->MOTOR_LEFT,
+//                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+//                              / pid_angle.calculate(0, angle)));
+//      } else
+//      {
+//        control->set_motor(control->MOTOR_RIGHT,
+//                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+//                              / pid_angle.calculate(0, angle)));
+//        control->set_motor(control->MOTOR_LEFT,
+//                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
+//                              * pid_angle.calculate(0, angle)));
+//      }
+//
+//      osEvent v = follow_thread.signal_wait(0, 5);
+//
+//      if (v.value.signals == E_NEW_GPS_DATA)
+//      {
+//        gps->calculate_distance(coor_other_boat.latitude, coor_other_boat.longitude, &distance, &angle);
+//      }
+//
+//      if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL || v.value.signals == E_START_RELAY)
+//      {
+//        exit = true;
+//      }
+//    }
   }
 }
 
@@ -343,6 +339,9 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
       reply.set_source(boat_id);
       reply.set_destination(message.get_source());
 
+      printf("received: %s\n", message.get_data());
+      printf("received size: %d\n", message.get_data_size());
+
       for (int i = 0; i < paramc; i++)
       {
         if (strcmp(params->name, "current1") == 0)
@@ -366,7 +365,7 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
         }
       }
 
-      printf("%s\n", reply.get_data());
+      printf("replying: %s\n", reply.get_data());
 
       network->send(reply);
 

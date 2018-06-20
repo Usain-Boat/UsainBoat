@@ -3,11 +3,11 @@
 //
 
 #include <string.h>
-#include <memory.h>
 #include "usain_network_message.h"
 
 UsainNetworkMessage::UsainNetworkMessage()
 {
+  _current_message.data_size = 0;
   memset(_current_message.data, 0, 246);
 }
 
@@ -92,10 +92,10 @@ void UsainNetworkMessage::add_parameter(const char *name)
 
 void UsainNetworkMessage::add_parameter(const char *name, char *value)
 {
+  if(_current_message.data_size != 0) strcat(reinterpret_cast<char *>(_current_message.data), " ");
   strcat(reinterpret_cast<char *>(_current_message.data), name);
   strcat(reinterpret_cast<char *>(_current_message.data), "=");
   strcat(reinterpret_cast<char *>(_current_message.data), value);
-  strcat(reinterpret_cast<char *>(_current_message.data), " ");
 
   _current_message.data_size = strlen(reinterpret_cast<const char *>(_current_message.data));
 }
@@ -116,12 +116,14 @@ void UsainNetworkMessage::add_parameter(const char *name, float value)
 
 int UsainNetworkMessage::get_paramaters(UsainNetworkMessage::paramater_t *dest, uint8_t size) const
 {
-  char *str = const_cast<char*>(reinterpret_cast<const char *>(_current_message.data));
+  char tmp[246] = "";
   char *key_value;
   char *key_value_s;
   int i = 0;
 
-  key_value = strtok_r(str, " ", &key_value_s);
+  strcpy(tmp, const_cast<char*>(reinterpret_cast<const char *>(_current_message.data)));
+
+  key_value = strtok_r(tmp, " ", &key_value_s);
 
   while (key_value)
   {
