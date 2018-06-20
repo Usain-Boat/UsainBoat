@@ -8,6 +8,7 @@
 #include "usain_network.h"
 #include "usain_control.h"
 #include "usain_led.h"
+#include "usain_monitor.h"
 //#include "pid.h"
 
 typedef enum
@@ -80,6 +81,8 @@ class UsainBoat
   UsainControl *control;
   UsainGPS *gps;
   UsainIMU *imu;
+  Usainmonitor motor_left_monitor;
+  Usainmonitor motor_right_monitor;
 
   Thread state_thread;
   Thread follow_thread;

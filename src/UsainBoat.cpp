@@ -4,7 +4,9 @@
 
 static UsainLED status_led;
 
-UsainBoat::UsainBoat() : determine_boat(A1)
+UsainBoat::UsainBoat() : determine_boat(A1),
+                         motor_left_monitor(A2, 0.1),
+                         motor_right_monitor(A3, 0.1)
 {
   imu = new UsainIMU();
   network = new UsainNetwork();
@@ -126,6 +128,7 @@ void UsainBoat::state_manual(event_e event)
 {
   switch(event){
     case E_WAIT_FOR_NEXT_MESSAGE:
+      UsainLED::set_pattern(UsainLED::STANDBY);
       control->set_mode(UsainControl::MODE_UC);
       control->set_motor(UsainControl::MOTOR_RIGHT, 0);
       control->set_motor(UsainControl::MOTOR_LEFT, 0);
@@ -343,10 +346,11 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
       {
         if (strcmp(params[i].name, "current1") == 0)
         {
-          reply.add_parameter("current1", 12);
+
+          reply.add_parameter("current1", motor_left_monitor.get_current());
         } else if (strcmp(params[i].name, "current2") == 0)
         {
-          reply.add_parameter("current2", 12);
+          reply.add_parameter("current2", motor_right_monitor.get_current());
         } else if (strcmp(params[i].name, "longitude") == 0)
         {
           reply.add_parameter("longitude", coor_boat.longitude);
