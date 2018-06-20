@@ -339,27 +339,24 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
       reply.set_source(boat_id);
       reply.set_destination(message.get_source());
 
-      printf("received: %s\n", message.get_data());
-      printf("received size: %d\n", message.get_data_size());
-
       for (int i = 0; i < paramc; i++)
       {
-        if (strcmp(params->name, "current1") == 0)
+        if (strcmp(params[i].name, "current1") == 0)
         {
           reply.add_parameter("current1", 12);
-        } else if (strcmp(params->name, "current2") == 0)
+        } else if (strcmp(params[i].name, "current2") == 0)
         {
           reply.add_parameter("current2", 12);
-        } else if (strcmp(params->name, "longitude") == 0)
+        } else if (strcmp(params[i].name, "longitude") == 0)
         {
           reply.add_parameter("longitude", coor_boat.longitude);
-        } else if (strcmp(params->name, "latitude") == 0)
+        } else if (strcmp(params[i].name, "latitude") == 0)
         {
           reply.add_parameter("latitude", coor_boat.latitude);
-        } else if (strcmp(params->name, "heading") == 0)
+        } else if (strcmp(params[i].name, "heading") == 0)
         {
           reply.add_parameter("heading", imu->get_compass());
-        } else if (strcmp(params->name, "mode") == 0)
+        } else if (strcmp(params[i].name, "mode") == 0)
         {
           reply.add_parameter("mode", current_mode);
         }

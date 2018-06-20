@@ -86,6 +86,7 @@ uint8_t UsainNetworkMessage::to_byte_array(uint8_t *dst) const
 
 void UsainNetworkMessage::add_parameter(const char *name)
 {
+  if(_current_message.data_size != 0) strcat(reinterpret_cast<char *>(_current_message.data), " ");
   strcat(reinterpret_cast<char *>(_current_message.data), name);
   _current_message.data_size = strlen(reinterpret_cast<const char *>(_current_message.data));
 }
@@ -137,7 +138,7 @@ int UsainNetworkMessage::get_paramaters(UsainNetworkMessage::paramater_t *dest, 
 
     key_value = strtok_r(NULL, ",", &key_value_s);
 
-    if(++i > size) return i;
+    i++;
   }
 
   return i;
