@@ -30,7 +30,7 @@ typedef enum
 
 typedef enum
 {
-  E_NO, E_ERROR, E_READY, E_INIT, E_START_FOLLOW,
+  E_NO = 1, E_ERROR, E_READY, E_INIT, E_START_FOLLOW,
   E_START_MANUAL, E_START_RELAY, E_WAIT_FOR_NEXT_MESSAGE,
   E_COLLISION, E_NEW_GPS_DATA
 } event_e;
@@ -44,6 +44,8 @@ struct _coordinates{
 class UsainBoat
 {
  public:
+  UsainBoat();
+
   void start();
 
  private:
@@ -65,19 +67,19 @@ class UsainBoat
   // driver callbacks
   void on_collision_handler();
   void on_message_received_handler(const UsainNetworkMessage &message, UsainNetwork *network);
-  void on_new_gps_data_handler();
+  void on_new_gps_data_handler(AdafruitUltimateGPS::gprmc_data_t data);
 
+  DigitalIn determine_boat;
   boat_id_t boat_id;
 
   EventFlags state_event;
   state_e current_state;
   state_e next_state;
 
-  UsainNetwork network;
-  UsainControl control;
-  UsainGPS gps;
-  UsainIMU imu;
-  UsainLED status_led;
+  UsainNetwork *network;
+  UsainControl *control;
+  UsainGPS *gps;
+  UsainIMU *imu;
 
   Thread state_thread;
   Thread follow_thread;

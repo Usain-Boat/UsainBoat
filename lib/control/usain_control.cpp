@@ -80,11 +80,11 @@ void UsainControl::handle_rc()
   float throttle_dc = ((_motor_throttle_in.dutycycle() - PWM_MIN) / (PWM_MAX - PWM_MIN));
   float steer_dc = ((_motor_steer_in.dutycycle() - PWM_MIN) / (PWM_MAX - PWM_MIN));
 
-  if (steer_dc < (PWM_MAX - PWM_MIN) / 2 + PWM_MIN)
+  if (steer_dc < 0.5)
   {
     _motor_left_out.write(throttle_MOTOR);
     _motor_right_out.write((PWM_MAX - PWM_MIN) * (steer_dc * 2) * throttle_dc + PWM_MIN);
-  } else if (steer_dc > (PWM_MAX - PWM_MIN) / 2 + PWM_MIN)
+  } else if (steer_dc > 0.5)
   {
     _motor_left_out.write((PWM_MAX - PWM_MIN) * ((1 - steer_dc) * 2) * throttle_dc + PWM_MIN);
     _motor_right_out.write(throttle_MOTOR);

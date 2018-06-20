@@ -17,16 +17,18 @@ class UsainGPS
 public:
     UsainGPS();
 
-    ~UsainGPS();
+    ~UsainGPS() {};
 
     uint8_t init();
 
     int get_gps_message(AdafruitUltimateGPS::gprmc_data_t &dest);
 
+    void get_average_gps(double *latitude, double *longitude);
+
     void calculate_distance(double dest_latitude, double dest_longitude, double *distance_cm,
                             double *bearing_degrees);
 
-    void on_new_message(const Callback<void()> &callback)
+    void on_new_message(const Callback<void(AdafruitUltimateGPS::gprmc_data_t gps_data)> &callback)
     {
         _collision_callback = callback;
     }
@@ -35,7 +37,7 @@ public:
     bool data_received();
 
 private:
-    Callback<void()>  _collision_callback;
+    Callback<void(AdafruitUltimateGPS::gprmc_data_t gps_data)>  _collision_callback;
 
     void update();
 

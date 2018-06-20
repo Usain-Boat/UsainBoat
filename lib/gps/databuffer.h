@@ -18,7 +18,7 @@ public:
 
     Databuffer(uint8_t *data, uint8_t size);
 
-    ~Databuffer();
+    ~Databuffer() {};
 
     void append(uint8_t data);
 

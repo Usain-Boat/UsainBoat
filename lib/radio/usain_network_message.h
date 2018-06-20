@@ -62,13 +62,13 @@ class UsainNetworkMessage
   void set_data(uint8_t data[], uint8_t size);
 
   // used for GET messages
-  void add_parameter(char *name);
+  void add_parameter(const char *name);
 
-  void add_parameter(char *name, char *value);
+  void add_parameter(const char *name, char *value);
 
-  void add_parameter(char *name, int value);
+  void add_parameter(const char *name, int value);
 
-  void add_parameter(char *name, float value);
+  void add_parameter(const char *name, float value);
 
   int get_paramaters(UsainNetworkMessage::paramater_t *dest, uint8_t size) const;
 

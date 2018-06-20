@@ -31,9 +31,6 @@ AdafruitUltimateGPS::AdafruitUltimateGPS() : _UART(D1, D0, 9600)
     _UART.attach(callback(this, &AdafruitUltimateGPS::_RXInterrupt), Serial::RxIrq);
 }
 
-AdafruitUltimateGPS::~AdafruitUltimateGPS() {
-
-}
 
 void AdafruitUltimateGPS::writeregister(uint8_t *packet_type) {
     _sendstring.clear();
@@ -227,10 +224,10 @@ void AdafruitUltimateGPS::parsedata() {
                 _last_received_gprmc.longitude_fixed = 0;
                 _last_received_gprmc.latitude_fixed = 0;
             }
-            for (int i = (average_location - 1); i > 0; i--)
+            for (int i = average_location - 2; i >= 0; i--)
             {
-                longitude_average[i - 1] = longitude_average[i];
-                latitude_average[i - 1] = latitude_average[i];
+                longitude_average[i + 1] = longitude_average[i];
+                latitude_average[i + 1] = latitude_average[i];
             }
             longitude_average[0] = _last_received_gprmc.longitude_fixed;
             latitude_average[0] = _last_received_gprmc.latitude_fixed;
@@ -255,7 +252,6 @@ void AdafruitUltimateGPS::_RXInterrupt() {
     static bool _flag_etx1_received = false; //local flag if begin message char is  received
 
     uint8_t getchar = _UART.getc();
-//    UART.putc(getchar);
     //eror check
     if (_flag_received_valid_string)
     {
@@ -332,20 +328,23 @@ void AdafruitUltimateGPS::GetLastGprmcData(gprmc_data_t *gpsdata) {
     memcpy(gpsdata, &_last_received_gprmc, sizeof(gprmc_data_t));
 }
 
-double AdafruitUltimateGPS::getaveragelocation(double *longitude, double *latitude) {
+void AdafruitUltimateGPS::getaveragelocation(double *longitude, double *latitude) {
     double longitude_temp = 0;
     double latitude_temp = 0;
-    for (int i = 0; i < average_location; i++)
+    int i;
+    for (i = 0; i < average_location; i++)
     {
-        if (latitude_average[i] != 0 && longitude_average[i] != 0)
+        if (latitude_average[i] == 0 || longitude_average[i] == 0)
         {
-            latitude_temp /= i;
             break;
         }
         longitude_temp += longitude_average[i];
         latitude_temp += latitude_average[i];
     }
-    return latitude_temp;
+    *longitude = longitude_temp / (i);
+    *latitude = latitude_temp / (i);
+
+
 }
 
 int AdafruitUltimateGPS::setbaudrateto115200() {

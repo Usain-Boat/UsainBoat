@@ -41,7 +41,7 @@ public:
 
     AdafruitUltimateGPS();
 
-    ~AdafruitUltimateGPS();
+    ~AdafruitUltimateGPS() {};
 
     void writeregister(uint8_t *PacketType);
 
@@ -54,7 +54,7 @@ public:
 
     void GetLastGprmcData(gprmc_data_t *gpsdata);
 
-    double getaveragelocation(double *longitude, double *latitude);
+    void getaveragelocation(double *longitude, double *latitude);
 
     int setbaudrateto115200();
 
