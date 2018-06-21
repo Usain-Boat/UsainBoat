@@ -11,7 +11,7 @@ float fmap(float x, float in_min, float in_max, float out_min, float out_max)
 }
 
 UsainBoat::UsainBoat() : determine_boat(A1),
-                         motor_left_monitor(A2, 0.1),
+                         motor_left_monitor(A4, 0.1),
                          motor_right_monitor(A3, 0.1)
 {
   imu = new UsainIMU();
@@ -228,10 +228,12 @@ void UsainBoat::relay_handler()
   bool move = false;
   bool exit = false;
 
-  if (boat_id == BOAT1)
+  while(!exit)
   {
-    move = true;
-  }
+    if (boat_id == BOAT1)
+    {
+      move = true;
+    }
 
     if (move)
     {
@@ -285,64 +287,65 @@ void UsainBoat::follow_handler()
 
   double longitude_dest, latitude_dest, distance_to_dest, home_to_dest_bearing, compass_to_dest_bearing;
 
-    control->set_mode(UsainControl::MODE_UC);
-    while (!exit)
+  control->set_mode(UsainControl::MODE_UC);
+  while (!exit)
+  {
+    osEvent v = follow_thread.signal_wait(0, 3000);
+
+    //!!!!!!!!!!!!!!!!!!!!!!!!
+    // INSERT: GET GPS DATA FROM OTHER BOAT
+    //!!!!!!!!!!!!!!!!!!!!!!!!
+    gps->calculate_distance(latitude_dest, longitude_dest, &distance_to_dest, &home_to_dest_bearing);
+    compass_to_dest_bearing = imu->get_compass() - home_to_dest_bearing;
+
+    if (1) // accelerate
     {
-      osEvent v = follow_thread.signal_wait(0, 3000);
-
-      //!!!!!!!!!!!!!!!!!!!!!!!!
-      // INSERT: GET GPS DATA FROM OTHER BOAT
-      //!!!!!!!!!!!!!!!!!!!!!!!!
-      gps->calculate_distance(latitude_dest, longitude_dest, &distance_to_dest, &home_to_dest_bearing);
-      compass_to_dest_bearing = imu->get_compass() - home_to_dest_bearing;
-
-      if (1) // accelerate
+      distance_to_dest_PID = arm_pid_f32(&PID_accelerate, 1000 - distance_to_dest);
+      //Range limit the output
+      if (distance_to_dest_PID < -2000.0)
       {
-        distance_to_dest_PID = arm_pid_f32(&PID_accelerate,  1000 - distance_to_dest);
-        //Range limit the output
-        if (distance_to_dest_PID < -2000.0)
-        {
-          distance_to_dest_PID = -2000.0f;
-        } else if (distance_to_dest_PID > 9000.0)
-        {
-          distance_to_dest_PID = 9000.0;
-        }
-      }
-      if (1) // steering
+        distance_to_dest_PID = -2000.0f;
+      } else if (distance_to_dest_PID > 9000.0)
       {
-        bearing_PID = arm_pid_f32(&PID_bearing, compass_to_dest_bearing);
-        //Range limit the output
-        if (bearing_PID < -160.0)
-        {
-          bearing_PID = -160.0f;
-        } else if (bearing_PID > 160.0)
-        {
-          bearing_PID = 160.0;
-        }
-      }
-      if(distance_to_dest_PID > 1000.0){
-
-        accelerate = fmap(distance_to_dest_PID, 0.0, 9000.0, 0.0, 0.6);
-        steer = fmap(fabs(bearing_PID), 0.0, 160.0, 0.0, 1.0);
-
-        if(bearing_PID < 0) //go left
-        {
-          control->set_motor(UsainControl::MOTOR_LEFT, steer * accelerate);
-          control->set_motor(UsainControl::MOTOR_RIGHT, 0.6);
-        } else //go right
-        {
-          control->set_motor(UsainControl::MOTOR_LEFT, 0.6);
-          control->set_motor(UsainControl::MOTOR_RIGHT, steer * accelerate);
-        }
-      }
-
-      if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL
-          || v.value.signals == E_START_RELAY)
-      {
-        exit = true;
+        distance_to_dest_PID = 9000.0;
       }
     }
+    if (1) // steering
+    {
+      bearing_PID = arm_pid_f32(&PID_bearing, compass_to_dest_bearing);
+      //Range limit the output
+      if (bearing_PID < -160.0)
+      {
+        bearing_PID = -160.0f;
+      } else if (bearing_PID > 160.0)
+      {
+        bearing_PID = 160.0;
+      }
+    }
+    if (distance_to_dest_PID > 1000.0)
+    {
+
+      accelerate = fmap(distance_to_dest_PID, 0.0, 9000.0, 0.0, 0.6);
+      steer = fmap(fabs(bearing_PID), 0.0, 160.0, 0.0, 1.0);
+
+      if (bearing_PID < 0) //go left
+      {
+        control->set_motor(UsainControl::MOTOR_LEFT, steer * accelerate);
+        control->set_motor(UsainControl::MOTOR_RIGHT, 0.6);
+      } else //go right
+      {
+        control->set_motor(UsainControl::MOTOR_LEFT, 0.6);
+        control->set_motor(UsainControl::MOTOR_RIGHT, steer * accelerate);
+      }
+    }
+
+    if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL
+        || v.value.signals == E_START_RELAY)
+    {
+      exit = true;
+    }
   }
+}
 
 // driver callbacks
 void UsainBoat::on_collision_handler()
