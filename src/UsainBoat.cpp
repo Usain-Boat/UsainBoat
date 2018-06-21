@@ -116,11 +116,11 @@ void UsainBoat::state_wait_for_radio(event_e event)
       break;
 
     case E_START_FOLLOW:
-      follow_thread.start(callback(this, &UsainBoat::follow_handler));
+      follow_thread = new Thread(callback(this, &UsainBoat::follow_handler));
       break;
 
     case E_START_RELAY:
-      relay_thread.start(callback(this, &UsainBoat::relay_handler));
+      relay_thread = new Thread(callback(this, &UsainBoat::relay_handler));
       break;
 
     default:
@@ -142,11 +142,11 @@ void UsainBoat::state_manual(event_e event)
       break;
 
     case E_START_FOLLOW:
-      follow_thread.start(callback(this, &UsainBoat::follow_handler));
+      follow_thread = new Thread(callback(this, &UsainBoat::follow_handler));
       break;
 
     case E_START_RELAY:
-      relay_thread.start(callback(this, &UsainBoat::relay_handler));
+      relay_thread = new Thread(callback(this, &UsainBoat::relay_handler));
       break;
 
     default:
@@ -161,25 +161,25 @@ void UsainBoat::state_follow(event_e event)
   switch (event)
   {
     case E_WAIT_FOR_NEXT_MESSAGE :
-      follow_thread.signal_set(E_WAIT_FOR_NEXT_MESSAGE);
+      follow_thread->signal_set(E_WAIT_FOR_NEXT_MESSAGE);
       control->set_mode(UsainControl::MODE_UC);
       control->set_motor(UsainControl::MOTOR_RIGHT, 0);
       control->set_motor(UsainControl::MOTOR_LEFT, 0);
       break;
 
     case E_START_MANUAL:
-      follow_thread.signal_set(E_START_MANUAL);
+      follow_thread->signal_set(E_START_MANUAL);
       UsainLED::set_pattern(UsainLED::INTERACTIVE);
       control->set_mode(UsainControl::MODE_RC);
       break;
 
     case E_START_RELAY:
-      follow_thread.signal_set(E_START_RELAY);
-      relay_thread.start(callback(this, &UsainBoat::relay_handler));
+      follow_thread->signal_set(E_START_RELAY);
+      relay_thread->start(callback(this, &UsainBoat::relay_handler));
       break;
 
     case E_NEW_GPS_DATA:
-      follow_thread.signal_set(E_NEW_GPS_DATA);
+      follow_thread->signal_set(E_NEW_GPS_DATA);
       break;
 
     default:
@@ -194,29 +194,29 @@ void UsainBoat::state_relay(event_e event)
   switch (event)
   {
     case E_WAIT_FOR_NEXT_MESSAGE:
-      relay_thread.signal_set(E_WAIT_FOR_NEXT_MESSAGE);
+      relay_thread->signal_set(E_WAIT_FOR_NEXT_MESSAGE);
       control->set_mode(UsainControl::MODE_UC);
       control->set_motor(UsainControl::MOTOR_RIGHT, 0);
       control->set_motor(UsainControl::MOTOR_LEFT, 0);
       break;
 
     case E_START_MANUAL:
-      relay_thread.signal_set(E_START_MANUAL);
+      relay_thread->signal_set(E_START_MANUAL);
       UsainLED::set_pattern(UsainLED::INTERACTIVE);
       control->set_mode(UsainControl::MODE_RC);
       break;
 
     case E_START_FOLLOW:
-      relay_thread.signal_set(E_START_FOLLOW);
-      follow_thread.start(callback(this, &UsainBoat::follow_handler));
+      relay_thread->signal_set(E_START_FOLLOW);
+      follow_thread->start(callback(this, &UsainBoat::follow_handler));
       break;
 
     case E_COLLISION:
-      relay_thread.signal_set(E_COLLISION);
+      relay_thread->signal_set(E_COLLISION);
       break;
 
-    case E_RELAY_COLLISION:
-      relay_thread.signal_set(E_COLLISION);
+    case E_CONTROLLER_COLLISION:
+      relay_thread->signal_set(E_CONTROLLER_COLLISION);
       break;
 
     default:
@@ -229,33 +229,38 @@ void UsainBoat::state_relay(event_e event)
 
 void UsainBoat::relay_handler()
 {
-  bool move = false;
+  printf("== relay started\n");
+
+//  bool move = false;
   bool exit = false;
 
-  while(!exit)
+//  if (boat_id == BOAT1)
+//  {
+//    move = true;
+//  } else
+//  {
+//    imu->enable();
+//  }
+
+  if (boat_id == BOAT1)
   {
-    if (boat_id == BOAT1)
-    {
-      move = true;
-    }
+    control->set_mode(control->MODE_RC);
+    imu->disable();
+  } else
+  {
+    control->set_mode(control->MODE_UC);
+    control->set_motor(control->MOTOR_LEFT, 0);
+    control->set_motor(control->MOTOR_RIGHT, 0);
+    imu->enable();
+  }
 
-    if (move)
-    {
-      control->set_mode(control->MODE_RC);
-      imu->disable();
-    } else
-    {
-      control->set_mode(control->MODE_UC);
-      control->set_motor(control->MOTOR_LEFT, 0);
-      control->set_motor(control->MOTOR_RIGHT, 0);
-      imu->enable();
-    }
-
-    osEvent v = relay_thread.signal_wait(0, osWaitForever);
+  while (!exit)
+  {
+    osEvent v = relay_thread->signal_wait(0, osWaitForever);
 
     if (v.value.signals == E_COLLISION)
     {
-      move = !move;
+      imu->disable();
 
       UsainNetworkMessage m;
 
@@ -265,13 +270,24 @@ void UsainBoat::relay_handler()
       m.add_parameter("collision");
 
       network->send(m);
+
+      control->set_mode(control->MODE_RC);
     }
-    if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL
-        || v.value.signals == E_START_FOLLOW)
+
+    if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE ||
+        v.value.signals == E_START_MANUAL||
+        v.value.signals == E_START_FOLLOW ||
+        v.value.signals == E_CONTROLLER_COLLISION)
     {
       exit = true;
+      control->set_mode(control->MODE_UC);
+      control->set_motor(control->MOTOR_LEFT, 0);
+      control->set_motor(control->MOTOR_RIGHT, 0);
+      imu->disable();
     }
   }
+
+  delete(relay_thread);
 }
 
 void UsainBoat::follow_handler()
@@ -303,7 +319,7 @@ void UsainBoat::follow_handler()
   control->set_mode(UsainControl::MODE_UC);
   while (!exit)
   {
-    osEvent v = follow_thread.signal_wait(0, 3000);
+    osEvent v = follow_thread->signal_wait(0, 3000);
 
     //!!!!!!!!!!!!!!!!!!!!!!!!
     // INSERT: GET GPS DATA FROM OTHER BOAT
@@ -358,6 +374,8 @@ void UsainBoat::follow_handler()
       exit = true;
     }
   }
+
+  delete(follow_thread);
 }
 
 // driver callbacks
@@ -417,7 +435,7 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
         }
       }
 
-      printf("replying: %s\n", reply.get_data());
+//      printf("replying: %s\n", reply.get_data());
 
       network->send(reply);
 
@@ -472,15 +490,15 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
     case UsainNetworkMessage::BCST:
     {
       //gps data received of other boat??
-      for(int i = 0; i < paramc; i++)
+      for (int i = 0; i < paramc; i++)
       {
-        if(strcmp(params[i].name, "collision") == 0)
+        if (strcmp(params[i].name, "collision") == 0)
         {
-          state_event.set(E_RELAY_COLLISION);
-        } else if(strcmp(params[i].name, "latitude") == 0)
+          state_event.set(E_CONTROLLER_COLLISION);
+        } else if (strcmp(params[i].name, "latitude") == 0)
         {
           // set other lat
-        } else if(strcmp(params[i].name, "longitude") == 0)
+        } else if (strcmp(params[i].name, "longitude") == 0)
         {
           // set other long
         }

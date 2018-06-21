@@ -34,7 +34,7 @@ typedef enum
 {
   E_NO = 1, E_ERROR, E_READY, E_INIT, E_START_FOLLOW,
   E_START_MANUAL, E_START_RELAY, E_WAIT_FOR_NEXT_MESSAGE,
-  E_COLLISION, E_NEW_GPS_DATA, E_RELAY_COLLISION
+  E_COLLISION, E_NEW_GPS_DATA, E_CONTROLLER_COLLISION
 } event_e;
 
 struct _coordinates{
@@ -86,8 +86,8 @@ class UsainBoat
   Usainmonitor motor_right_monitor;
 
   Thread state_thread;
-  Thread follow_thread;
-  Thread relay_thread;
+  Thread *follow_thread;
+  Thread *relay_thread;
   osThreadId thread_id;
 
   _coordinates coor_boat;
