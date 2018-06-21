@@ -7,7 +7,8 @@
 
 
 UsainIMU::UsainIMU() :
-    _imu(0xD6, 0x3C)
+    _imu(0xD6, 0x3C),
+    _enabled(false)
 {
 
 }
@@ -57,7 +58,7 @@ void UsainIMU::update_thread()
 
     if (abs(_imu.ax - prev_ax) > 6500 || abs(_imu.ay - prev_ay) > 6500)
     {
-      if(_colliion_callback)
+      if(_colliion_callback && _enabled)
         _colliion_callback.call();
     }
 
@@ -66,4 +67,14 @@ void UsainIMU::update_thread()
 
     wait(0.01);
   }
+}
+
+void UsainIMU::enable()
+{
+  _enabled = true;
+}
+
+void UsainIMU::disable()
+{
+  _enabled = false;
 }

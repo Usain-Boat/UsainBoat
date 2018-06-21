@@ -5,7 +5,7 @@
 
 static UsainLED status_led;
 
-long map(long x, long in_min, long in_max, long out_min, long out_max)
+float fmap(float x, float in_min, float in_max, float out_min, float out_max)
 {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
@@ -239,12 +239,13 @@ void UsainBoat::relay_handler()
     if (move)
     {
       control->set_mode(control->MODE_RC);
-
+      imu->disable();
     } else
     {
       control->set_mode(control->MODE_UC);
       control->set_motor(control->MOTOR_LEFT, 0);
       control->set_motor(control->MOTOR_RIGHT, 0);
+      imu->enable();
     }
 
     osEvent v = relay_thread.signal_wait(0, osWaitForever);
@@ -320,7 +321,7 @@ void UsainBoat::follow_handler()
         //Range limit the output
         if (distance_to_dest_PID < -2000.0)
         {
-          distance_to_dest_PID = -2000.0;
+          distance_to_dest_PID = -2000.0f;
         } else if (distance_to_dest_PID > 9000.0)
         {
           distance_to_dest_PID = 9000.0;
@@ -332,7 +333,7 @@ void UsainBoat::follow_handler()
         //Range limit the output
         if (bearing_PID < -160.0)
         {
-          bearing_PID = -160.0;
+          bearing_PID = -160.0f;
         } else if (bearing_PID > 160.0)
         {
           bearing_PID = 160.0;
@@ -340,8 +341,8 @@ void UsainBoat::follow_handler()
       }
       if(distance_to_dest_PID > 1000){
 
-        accelerate = map(distance_to_dest_PID, 0.0, 9000.0, 0.0, 0.6);
-        steer = map(abs(bearing_PID), 0.0, 160.0, 0.0, 1.0);
+        accelerate = fmap(distance_to_dest_PID, 0.0, 9000.0, 0.0, 0.6);
+        steer = fmap(fabs(bearing_PID), 0.0, 160.0, 0.0, 1.0);
 
         if(bearing_PID < 0) //go left
         {

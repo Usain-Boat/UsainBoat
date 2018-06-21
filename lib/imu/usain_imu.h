@@ -24,8 +24,14 @@ class UsainIMU
 
   void register_on_collision(const Callback<void()> &callback);
 
+  void enable();
+
+  void disable();
+
  private:
   void update_thread();
+
+  bool _enabled;
 
   LSM9DS1 _imu;
 
