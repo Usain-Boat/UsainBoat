@@ -1,8 +1,14 @@
 #include <usain_network_message.h>
 #include <cmsis_os.h>
+#include <arm_math.h>
 #include "UsainBoat.h"
 
 static UsainLED status_led;
+
+long map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 
 UsainBoat::UsainBoat() : determine_boat(A1),
                          motor_left_monitor(A2, 0.1),
@@ -28,27 +34,27 @@ void UsainBoat::start()
     switch (current_state)
     {
       case S_INIT:
-        printf("== state:S_INIT event:%d\n", (int)event);
+        printf("== state:S_INIT event:%d\n", (int) event);
         state_init();
         break;
 
       case S_WAIT_FOR_RADIO:
-        printf("== state:S_WAIT_FOR_RADIO event:%d\n", (int)event);
+        printf("== state:S_WAIT_FOR_RADIO event:%d\n", (int) event);
         state_wait_for_radio(event);
         break;
 
       case S_FOLLOW:
-        printf("== state:S_FOLLOW event:%d\n", (int)event);
+        printf("== state:S_FOLLOW event:%d\n", (int) event);
         state_follow(event);
         break;
 
       case S_MANUAL:
-        printf("== state:S_MANUAL event:%d\n", (int)event);
+        printf("== state:S_MANUAL event:%d\n", (int) event);
         state_manual(event);
         break;
 
       case S_RELAY:
-        printf("== state:S_RELAY event:%d\n", (int)event);
+        printf("== state:S_RELAY event:%d\n", (int) event);
         state_relay(event);
         break;
 
@@ -100,10 +106,10 @@ void UsainBoat::state_init()
   control->set_motor(UsainControl::MOTOR_LEFT, 0);
 }
 
-
 void UsainBoat::state_wait_for_radio(event_e event)
 {
-  switch(event){
+  switch (event)
+  {
     case E_START_MANUAL:
       UsainLED::set_pattern(UsainLED::INTERACTIVE);
       control->set_mode(UsainControl::MODE_RC);
@@ -126,7 +132,8 @@ void UsainBoat::state_wait_for_radio(event_e event)
 
 void UsainBoat::state_manual(event_e event)
 {
-  switch(event){
+  switch (event)
+  {
     case E_WAIT_FOR_NEXT_MESSAGE:
       UsainLED::set_pattern(UsainLED::STANDBY);
       control->set_mode(UsainControl::MODE_UC);
@@ -151,7 +158,8 @@ void UsainBoat::state_manual(event_e event)
 
 void UsainBoat::state_follow(event_e event)
 {
-  switch(event){
+  switch (event)
+  {
     case E_WAIT_FOR_NEXT_MESSAGE :
       follow_thread.signal_set(E_WAIT_FOR_NEXT_MESSAGE);
       control->set_mode(UsainControl::MODE_UC);
@@ -183,7 +191,7 @@ void UsainBoat::state_follow(event_e event)
 
 void UsainBoat::state_relay(event_e event)
 {
-  switch(event)
+  switch (event)
   {
     case E_WAIT_FOR_NEXT_MESSAGE:
       relay_thread.signal_set(E_WAIT_FOR_NEXT_MESSAGE);
@@ -220,16 +228,20 @@ void UsainBoat::relay_handler()
   bool move = false;
   bool exit = false;
 
-  if(boat_id == BOAT1){
+  if (boat_id == BOAT1)
+  {
     move = true;
   }
 
-  while(!exit){
+  while (!exit)
+  {
 
-    if(move){
+    if (move)
+    {
       control->set_mode(control->MODE_RC);
 
-    }else{
+    } else
+    {
       control->set_mode(control->MODE_UC);
       control->set_motor(control->MOTOR_LEFT, 0);
       control->set_motor(control->MOTOR_RIGHT, 0);
@@ -237,10 +249,13 @@ void UsainBoat::relay_handler()
 
     osEvent v = relay_thread.signal_wait(0, osWaitForever);
 
-    if(v.value.signals == E_COLLISION){
+    if (v.value.signals == E_COLLISION)
+    {
       move = !move;
     }
-    if(v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL || v.value.signals == E_START_FOLLOW){
+    if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL
+        || v.value.signals == E_START_FOLLOW)
+    {
       exit = true;
     }
   }
@@ -254,21 +269,91 @@ void UsainBoat::follow_handler()
 
   UsainLED::set_color(UsainLED::COLOR_GREEN);
 
-
-  if (boat_id == BOAT1){
+  if (boat_id == BOAT1)
+  {
     control->set_mode(UsainControl::MODE_RC);
     while (!exit)
     {
-      osEvent v = follow_thread.signal_wait(0, 5);
+      osEvent v = follow_thread.signal_wait(0, 3000);
 
-      if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL || v.value.signals == E_START_RELAY)
+      // send broadcast
+
+      if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL
+          || v.value.signals == E_START_RELAY)
       {
         exit = true;
       }
     }
-  }else
+  } else
   {
+    arm_pid_instance_f32 PID_accelerate = {};
+    PID_accelerate.Kp = 1.0;
+    PID_accelerate.Ki = 1.0;
+    PID_accelerate.Kd = 0.0;
+    arm_pid_init_f32(&PID_accelerate, 1);
 
+    arm_pid_instance_f32 PID_bearing = {};
+    PID_bearing.Kp = 1.0;
+    PID_bearing.Ki = 1.0;
+    PID_bearing.Kd = 0.0;
+    arm_pid_init_f32(&PID_bearing, 1);
+
+    float accelerate = 0, accelerate_old = 0;
+    float steer = 0, steer_old = 0;
+    float distance_to_dest_PID, bearing_PID;
+
+    double longitude_dest, latitude_dest, distance_to_dest, home_to_dest_bearing, compass_to_dest_bearing;
+
+    while (1)
+    {
+      //Process the PID controller
+
+      //!!!!!!!!!!!!!!!!!!!!!!!!
+      // INSERT: GET GPS DATA FROM OTHER BOAT
+      //!!!!!!!!!!!!!!!!!!!!!!!!
+      gps->calculate_distance(latitude_dest, longitude_dest, &distance_to_dest, &home_to_dest_bearing);
+      compass_to_dest_bearing = imu->get_compass() - home_to_dest_bearing;
+
+      if (1) // accelerate
+      {
+        distance_to_dest_PID = arm_pid_f32(&PID_accelerate,  1000 - distance_to_dest);
+        //Range limit the output
+        if (distance_to_dest_PID < -2000.0)
+        {
+          distance_to_dest_PID = -2000.0;
+        } else if (distance_to_dest_PID > 9000.0)
+        {
+          distance_to_dest_PID = 9000.0;
+        }
+      }
+      if (1) // accelerate
+      {
+        bearing_PID = arm_pid_f32(&PID_bearing, compass_to_dest_bearing);
+        //Range limit the output
+        if (bearing_PID < -160.0)
+        {
+          bearing_PID = -160.0;
+        } else if (bearing_PID > 160.0)
+        {
+          bearing_PID = 160.0;
+        }
+      }
+      if(distance_to_dest_PID > 1000){
+
+        accelerate = map(distance_to_dest_PID, 0.0, 9000.0, 0.0, 0.6);
+        steer = map(abs(bearing_PID), 0.0, 160.0, 0.0, 1.0);
+
+        if(bearing_PID < 0) //go left
+        {
+          control->set_motor(UsainControl::MOTOR_LEFT, steer * accelerate);
+          control->set_motor(UsainControl::MOTOR_RIGHT, 0.6);
+        } else //go right
+        {
+          control->set_motor(UsainControl::MOTOR_LEFT, 0.6);
+          control->set_motor(UsainControl::MOTOR_RIGHT, steer * accelerate);
+        }
+      }
+    }
 //    pid pid_angle = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
 //    pid pid_distance = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
 //
@@ -379,9 +464,9 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
       if (message.get_source() == 0)
       {
         printf("parameter : %s\n", params[0].name);
-        for(int i = 0; i < paramc; i++)
+        for (int i = 0; i < paramc; i++)
         {
-          if(strcmp(params[i].name, "mode") == 0)
+          if (strcmp(params[i].name, "mode") == 0)
           {
             switch (params[i].value[0])
             {

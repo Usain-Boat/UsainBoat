@@ -88,7 +88,7 @@ void UsainGPS::calculate_distance(double dest_latitude, double dest_longitude, d
                                  - sin(rlat1) * cos(rlat2) * cos(dlon));
 
   *distance_cm = (R * c);
-  *bearing_degrees = rad_bearing * (180 / pi);
+  *bearing_degrees = (rad_bearing * (180 / pi) < 0 ? rad_bearing * (180 / pi) + 360 : rad_bearing * (180 / pi));
 }
 
 bool UsainGPS::data_received()

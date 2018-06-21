@@ -2,6 +2,7 @@
 #define USAINBOAT_H
 
 #include "mbed.h"
+#include "arm_math.h"
 
 #include "usain_gps.h"
 #include "usain_imu.h"
