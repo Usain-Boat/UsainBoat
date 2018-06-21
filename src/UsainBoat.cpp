@@ -78,8 +78,6 @@ void UsainBoat::state_init()
     error("imu init failure\n");
   }
 
-  imu->enable();
-
   if (!network->init())
   {
     error("network init failure\n");
@@ -272,7 +270,11 @@ void UsainBoat::relay_handler()
       m.set_destination(boat_id == BOAT1 ? BOAT2 : BOAT1);
       m.add_parameter("collision");
 
-      network->send(m);
+      for(int i = 0; i < 3; i++)
+      {
+        network->send(m);
+        wait_ms(100);
+      }
 
       control->set_mode(control->MODE_RC);
     }
@@ -462,7 +464,6 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
       //check if wallstation has send the post
       if (message.get_source() == 0)
       {
-        printf("parameter : %s\n", params[0].name);
         for (int i = 0; i < paramc; i++)
         {
           if (strcmp(params[i].name, "mode") == 0)
