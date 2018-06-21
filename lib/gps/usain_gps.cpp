@@ -7,27 +7,25 @@
 
 #define pi 3.141592653589793238462
 
+
 UsainGPS::UsainGPS() {}
 
-uint8_t UsainGPS::init()
-{
+
+uint8_t UsainGPS::init() {
   uint8_t return_value = 0;
-//    int status = 0;
-  int status = _gps.coldstart();
-  if (status)
-  {
-    return_value |= 0x01;
-  }
+//  int status = 0;
+    int status = _gps.coldstart();
+    if (status)
+    {
+        return_value |= 0x01;
+    }
+  while (_gps.setbaudrateto115200());
+
   Timer delaytje;
   delaytje.reset();
   delaytje.start();
-  while (_gps.setbaudrateto115200() && delaytje.read() < 1) { wait_ms(1); }
-  delaytje.reset();
-  delaytje.start();
-  while (delaytje.read() < 1) { wait_ms(1); }
-  delaytje.reset();
-  delaytje.start();
-  while (_gps.setupdaterate((char *) "100") && delaytje.read() < 1) { wait_ms(1); }
+  while (delaytje.read() < 1);
+  while (_gps.setupdaterate((char *) "100"));
 
   if (status)
   {
@@ -46,8 +44,7 @@ uint8_t UsainGPS::init()
   return return_value;
 }
 
-int UsainGPS::get_gps_message(AdafruitUltimateGPS::gprmc_data_t &dest)
-{
+int UsainGPS::get_gps_message(AdafruitUltimateGPS::gprmc_data_t &dest) {
   _gps.GetLastGprmcData(&dest);
   if (!_gps.ReceievedNewGPRMC())
   {
@@ -66,10 +63,10 @@ void UsainGPS::get_average_gps(double *latitude, double *longitude)
   _gps.getaveragelocation(longitude, latitude);
 }
 
+
 //haversine method
 void UsainGPS::calculate_distance(double dest_latitude, double dest_longitude, double *distance_cm,
-                                  double *bearing_degrees)
-{
+                                  double *bearing_degrees) {
   double home_latitude, home_longitude;
   _gps.getaveragelocation(&home_longitude, &home_latitude);
 
@@ -88,29 +85,36 @@ void UsainGPS::calculate_distance(double dest_latitude, double dest_longitude, d
                                  - sin(rlat1) * cos(rlat2) * cos(dlon));
 
   *distance_cm = (R * c);
-  *bearing_degrees = (rad_bearing * (180 / pi) < 0 ? rad_bearing * (180 / pi) + 360 : rad_bearing * (180 / pi));
+  *bearing_degrees = rad_bearing * (180 / pi);
 }
 
-bool UsainGPS::data_received()
-{
+
+bool UsainGPS::data_received() {
   return _gps.ReceievedNewGPRMC();
 }
 
-void UsainGPS::update()
-{
+void UsainGPS::update() {
   AdafruitUltimateGPS::gprmc_data_t gps_data;
+
+  int count = 0;
 
   while (1)
   {
     _gps.parsedata();
+
     if (_gps.ReceievedNewGPRMC() && _collision_callback)
     {
       _gps.GetLastGprmcData(&gps_data);
-      _collision_callback.call(gps_data);
+
+      if(count++ > 20)
+      {
+        _collision_callback.call(gps_data);
+        count = 0;
+      }
+
+      _gps.ReceievedNewGPRMC(false);
     }
 
+    wait_ms(1);
   }
 }
-
-
-

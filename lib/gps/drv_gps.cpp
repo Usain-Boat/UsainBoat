@@ -208,11 +208,11 @@ void AdafruitUltimateGPS::parsedata() {
                    10);
 
             float degrees =
-                    ((_last_received_gprmc.latitude[0] - 0x30) * 10) + (_last_received_gprmc.latitude[1] - 0x30);
+                ((_last_received_gprmc.latitude[0] - 0x30) * 10) + (_last_received_gprmc.latitude[1] - 0x30);
             float length = strtof((char *) &_last_received_gprmc.latitude[2], NULL);
             _last_received_gprmc.latitude_fixed = degrees + (length / 60);
             degrees =
-                    ((_last_received_gprmc.longitude[0] - 0x30) * 100) +
+                ((_last_received_gprmc.longitude[0] - 0x30) * 100) +
                     ((_last_received_gprmc.longitude[1] - 0x30) * 10) + (_last_received_gprmc.longitude[2] - 0x30);
             length = strtof((char *) &_last_received_gprmc.longitude[3], NULL);
 
@@ -404,9 +404,11 @@ int AdafruitUltimateGPS::coldstart() {
     lookforflags.start();
     while (lookforflags.read_ms() < 60);
     _UART.baud(9600);
+    writeregister((uint8_t *) GPS_CMD_FULL_COLD_START);
 
     lookforflags.reset();
     lookforflags.start();
+    while (lookforflags.read_ms() < 60);
 
     while (lookforflags.read() < 2)
     {

@@ -13,33 +13,33 @@
 
 class Databuffer
 {
-public:
-    Databuffer() : _index(0) { _flag_buffer_overflow = false; };
+ public:
+  Databuffer() : _index(0) { _flag_buffer_overflow = false; };
 
-    Databuffer(uint8_t *data, uint8_t size);
+  Databuffer(uint8_t *data, uint8_t size);
 
-    ~Databuffer() {};
+  ~Databuffer() {};
 
-    void append(uint8_t data);
+  void append(uint8_t data);
 
-    void append(uint8_t *data, uint8_t size);
+  void append(uint8_t *data, uint8_t size);
 
-    void clear();
+  void clear();
 
-    uint8_t *get_data();
+  uint8_t *get_data();
 
-    uint8_t get_index();
+  uint8_t get_index();
 
-    bool get_overflow_status() { return _flag_buffer_overflow; };
+  bool get_overflow_status() { return _flag_buffer_overflow; };
 
-    void set_overflow_status(bool status) { _flag_buffer_overflow = status; };
+  void set_overflow_status(bool status) { _flag_buffer_overflow = status; };
 
-    uint8_t *operator[](const int index);
+  uint8_t *operator[](const int index);
 
-private:
-    uint8_t _index;
-    uint8_t _data[DATABUFFERSIZE];
-    bool _flag_buffer_overflow;
+ private:
+  uint8_t _index;
+  uint8_t _data[DATABUFFERSIZE];
+  bool _flag_buffer_overflow;
 };
 
 

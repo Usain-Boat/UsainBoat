@@ -14,39 +14,38 @@
 
 class UsainGPS
 {
-public:
-    UsainGPS();
+ public:
+  UsainGPS();
 
-    ~UsainGPS() {};
+  ~UsainGPS() {};
 
-    uint8_t init();
+  uint8_t init();
 
-    int get_gps_message(AdafruitUltimateGPS::gprmc_data_t &dest);
+  int get_gps_message(AdafruitUltimateGPS::gprmc_data_t &dest);
 
-    void get_average_gps(double *latitude, double *longitude);
+  void get_average_gps(double *latitude, double *longitude);
 
-    void calculate_distance(double dest_latitude, double dest_longitude, double *distance_cm,
-                            double *bearing_degrees);
+  void calculate_distance(double dest_latitude, double dest_longitude, double *distance_cm,
+                          double *bearing_degrees);
 
-    void on_new_message(const Callback<void(AdafruitUltimateGPS::gprmc_data_t gps_data)> &callback)
-    {
-        _collision_callback = callback;
-    }
+  void on_new_message(const Callback<void(AdafruitUltimateGPS::gprmc_data_t gps_data)> &callback)
+  {
+      _collision_callback = callback;
+  }
 
 
-    bool data_received();
+  bool data_received();
 
-private:
-    Callback<void(AdafruitUltimateGPS::gprmc_data_t gps_data)>  _collision_callback;
+ private:
+  Callback<void(AdafruitUltimateGPS::gprmc_data_t gps_data)>  _collision_callback;
 
-    void update();
+  void update();
 
-    Thread _update;
+  Thread _update;
 
-    AdafruitUltimateGPS _gps;
+  AdafruitUltimateGPS _gps;
 
 
 };
 
 #endif //BLINKY_USAIN_GPS_H
-

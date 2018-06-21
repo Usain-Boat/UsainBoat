@@ -56,10 +56,16 @@ void UsainIMU::update_thread()
   {
     _imu.update();
 
-    if (abs(_imu.ax - prev_ax) > 6500 || abs(_imu.ay - prev_ay) > 6500)
+    if (abs(_imu.ax - prev_ax) > 5000 || abs(_imu.ay - prev_ay) > 5000)
     {
       if(_colliion_callback && _enabled)
+      {
         _colliion_callback.call();
+        prev_ax = 0;
+        prev_ay = 0;
+        wait_ms(1000);
+        continue;
+      }
     }
 
     prev_ax = _imu.ax;

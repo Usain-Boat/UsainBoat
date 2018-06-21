@@ -1,6 +1,7 @@
 #include <usain_network_message.h>
 #include <cmsis_os.h>
 #include <arm_math.h>
+#include <drv_gps.h>
 #include "UsainBoat.h"
 
 static UsainLED status_led;
@@ -77,15 +78,17 @@ void UsainBoat::state_init()
     error("imu init failure\n");
   }
 
+  imu->enable();
+
   if (!network->init())
   {
     error("network init failure\n");
   }
 
-//  if (gps->init() != 0)
-//  {
-//    error("gps init failure\n");
-//  }
+  if (gps->init() != 0)
+  {
+    error("gps init failure\n");
+  }
 
   boat_id = determine_boat == 0 ? BOAT1 : BOAT2;
 
@@ -386,7 +389,19 @@ void UsainBoat::on_collision_handler()
 
 void UsainBoat::on_new_gps_data_handler(AdafruitUltimateGPS::gprmc_data_t data)
 {
-  state_event.set(E_NEW_GPS_DATA);
+  if(data.validity[0] == 'A'){
+    gps->get_average_gps(&data.latitude_fixed, &data.longitude_fixed);
+
+    UsainNetworkMessage m;
+
+    m.set_type(UsainNetworkMessage::BCST);
+    m.set_source(boat_id);
+    m.set_destination(boat_id == BOAT1 ? BOAT2 : BOAT1);
+    m.add_parameter("latitude", static_cast<float>(data.latitude_fixed));
+    m.add_parameter("longitude", static_cast<float>(data.longitude_fixed));
+
+    network->send(m);
+  }
 }
 
 void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, UsainNetwork *network)
@@ -489,7 +504,6 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
     }
     case UsainNetworkMessage::BCST:
     {
-      //gps data received of other boat??
       for (int i = 0; i < paramc; i++)
       {
         if (strcmp(params[i].name, "collision") == 0)
@@ -497,10 +511,11 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
           state_event.set(E_CONTROLLER_COLLISION);
         } else if (strcmp(params[i].name, "latitude") == 0)
         {
-          // set other lat
+          coor_other_boat.latitude = static_cast<float>(atof(params[i].value));
         } else if (strcmp(params[i].name, "longitude") == 0)
         {
-          // set other long
+          coor_other_boat.longitude = static_cast<float>(atof(params[i].value));
+          state_event.set(E_NEW_GPS_DATA);
         }
       }
 

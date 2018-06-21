@@ -9,7 +9,7 @@
 //SX1276_Radio UsainNetwork::_radio(PA_7, PA_6, PA_5, PD_14, PG_9, PF_12, PG_14, PF_15, PE_13, PF_14, PE_11);
 
 UsainNetwork::UsainNetwork() :
-    _radio(PA_7, PA_6, PA_5, PD_14, PG_9, PF_12, PG_14, PF_15, PE_13, PF_14, PE_11),
+    _radio(PA_7, PA_6, PA_5, PD_14, NC, PF_12, NC, NC, NC, NC, NC),
     n_rx_callbacks(0),
     n_tx_callbacks(0)
 {
@@ -46,7 +46,7 @@ bool UsainNetwork::init()
                        true); // cont
 
   _radio.set_tx_config(MODEM_FSK, // modem
-                       14, // power
+                       20, // power
                        25000, // fdev
                        0, // bw
                        50000, // dr

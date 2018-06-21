@@ -865,7 +865,6 @@ float LSM9DS1::getHeading()
   float heading = atan2(magYcomp, magXcomp);
 
 //  float declinationAngle = (1.0 + (35.0 / 60.0)) / (180 / M_PI);
-//  heading += declinationAngle;
 
   // Correct for heading < 0deg and heading > 360deg
   if (heading < 0)
