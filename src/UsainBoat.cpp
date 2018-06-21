@@ -233,9 +233,6 @@ void UsainBoat::relay_handler()
     move = true;
   }
 
-  while (!exit)
-  {
-
     if (move)
     {
       control->set_mode(control->MODE_RC);
@@ -270,44 +267,28 @@ void UsainBoat::follow_handler()
 
   UsainLED::set_color(UsainLED::COLOR_GREEN);
 
-  if (boat_id == BOAT1)
-  {
-    control->set_mode(UsainControl::MODE_RC);
+  arm_pid_instance_f32 PID_accelerate = {};
+  PID_accelerate.Kp = 1.0;
+  PID_accelerate.Ki = 1.0;
+  PID_accelerate.Kd = 0.0;
+  arm_pid_init_f32(&PID_accelerate, 1);
+
+  arm_pid_instance_f32 PID_bearing = {};
+  PID_bearing.Kp = 1.0;
+  PID_bearing.Ki = 1.0;
+  PID_bearing.Kd = 0.0;
+  arm_pid_init_f32(&PID_bearing, 1);
+
+  float accelerate = 0;
+  float steer = 0;
+  float distance_to_dest_PID, bearing_PID;
+
+  double longitude_dest, latitude_dest, distance_to_dest, home_to_dest_bearing, compass_to_dest_bearing;
+
+    control->set_mode(UsainControl::MODE_UC);
     while (!exit)
     {
       osEvent v = follow_thread.signal_wait(0, 3000);
-
-      // send broadcast
-
-      if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL
-          || v.value.signals == E_START_RELAY)
-      {
-        exit = true;
-      }
-    }
-  } else
-  {
-    arm_pid_instance_f32 PID_accelerate = {};
-    PID_accelerate.Kp = 1.0;
-    PID_accelerate.Ki = 1.0;
-    PID_accelerate.Kd = 0.0;
-    arm_pid_init_f32(&PID_accelerate, 1);
-
-    arm_pid_instance_f32 PID_bearing = {};
-    PID_bearing.Kp = 1.0;
-    PID_bearing.Ki = 1.0;
-    PID_bearing.Kd = 0.0;
-    arm_pid_init_f32(&PID_bearing, 1);
-
-    float accelerate = 0, accelerate_old = 0;
-    float steer = 0, steer_old = 0;
-    float distance_to_dest_PID, bearing_PID;
-
-    double longitude_dest, latitude_dest, distance_to_dest, home_to_dest_bearing, compass_to_dest_bearing;
-
-    while (1)
-    {
-      //Process the PID controller
 
       //!!!!!!!!!!!!!!!!!!!!!!!!
       // INSERT: GET GPS DATA FROM OTHER BOAT
@@ -327,7 +308,7 @@ void UsainBoat::follow_handler()
           distance_to_dest_PID = 9000.0;
         }
       }
-      if (1) // accelerate
+      if (1) // steering
       {
         bearing_PID = arm_pid_f32(&PID_bearing, compass_to_dest_bearing);
         //Range limit the output
@@ -339,7 +320,7 @@ void UsainBoat::follow_handler()
           bearing_PID = 160.0;
         }
       }
-      if(distance_to_dest_PID > 1000){
+      if(distance_to_dest_PID > 1000.0){
 
         accelerate = fmap(distance_to_dest_PID, 0.0, 9000.0, 0.0, 0.6);
         steer = fmap(fabs(bearing_PID), 0.0, 160.0, 0.0, 1.0);
@@ -354,46 +335,14 @@ void UsainBoat::follow_handler()
           control->set_motor(UsainControl::MOTOR_RIGHT, steer * accelerate);
         }
       }
+
+      if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL
+          || v.value.signals == E_START_RELAY)
+      {
+        exit = true;
+      }
     }
-//    pid pid_angle = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
-//    pid pid_distance = pid(0.1, 100, -100, 0.1, 0.01, 0.5);
-//
-//    control->set_mode(UsainControl::MODE_UC);
-//
-//    while (!exit)
-//    {
-//      if (angle <= 0)
-//      {
-//        control->set_motor(control->MOTOR_RIGHT,
-//                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-//                              * pid_angle.calculate(0, angle)));
-//        control->set_motor(control->MOTOR_LEFT,
-//                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-//                              / pid_angle.calculate(0, angle)));
-//      } else
-//      {
-//        control->set_motor(control->MOTOR_RIGHT,
-//                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-//                              / pid_angle.calculate(0, angle)));
-//        control->set_motor(control->MOTOR_LEFT,
-//                          static_cast<float>(0.2 * pid_distance.calculate(0.8, distance)
-//                              * pid_angle.calculate(0, angle)));
-//      }
-//
-//      osEvent v = follow_thread.signal_wait(0, 5);
-//
-//      if (v.value.signals == E_NEW_GPS_DATA)
-//      {
-//        gps->calculate_distance(coor_other_boat.latitude, coor_other_boat.longitude, &distance, &angle);
-//      }
-//
-//      if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL || v.value.signals == E_START_RELAY)
-//      {
-//        exit = true;
-//      }
-//    }
   }
-}
 
 // driver callbacks
 void UsainBoat::on_collision_handler()
