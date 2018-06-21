@@ -215,6 +215,10 @@ void UsainBoat::state_relay(event_e event)
       relay_thread.signal_set(E_COLLISION);
       break;
 
+    case E_RELAY_COLLISION:
+      relay_thread.signal_set(E_COLLISION);
+      break;
+
     default:
       break;
 
@@ -252,6 +256,15 @@ void UsainBoat::relay_handler()
     if (v.value.signals == E_COLLISION)
     {
       move = !move;
+
+      UsainNetworkMessage m;
+
+      m.set_type(UsainNetworkMessage::BCST);
+      m.set_source(boat_id);
+      m.set_destination(boat_id == BOAT1 ? BOAT2 : BOAT1);
+      m.add_parameter("collision");
+
+      network->send(m);
     }
     if (v.value.signals == E_WAIT_FOR_NEXT_MESSAGE || v.value.signals == E_START_MANUAL
         || v.value.signals == E_START_FOLLOW)
@@ -459,30 +472,43 @@ void UsainBoat::on_message_received_handler(const UsainNetworkMessage &message, 
     case UsainNetworkMessage::BCST:
     {
       //gps data received of other boat??
-
-      uint8_t comma = 0;
-      char latitude[9];
-
-      for (int i = 4; i < message.get_data_size() - 1; i++)
+      for(int i = 0; i < paramc; i++)
       {
-        if (data[i] == ',')
+        if(strcmp(params[i].name, "collision") == 0)
         {
-          comma = i + 1;
-          break;
+          state_event.set(E_RELAY_COLLISION);
+        } else if(strcmp(params[i].name, "latitude") == 0)
+        {
+          // set other lat
+        } else if(strcmp(params[i].name, "longitude") == 0)
+        {
+          // set other long
         }
-        latitude[i] = data[i];
       }
 
-      char longitude[8];
-
-      for (int i = comma; i < message.get_data_size() - 1; i++)
-      {
-        latitude[i - comma] = data[i];
-      }
-
-      coor_other_boat.latitude = atof(latitude);
-      coor_other_boat.longitude = atof(longitude);
-      state_event.set(E_NEW_GPS_DATA);
+//      uint8_t comma = 0;
+//      char latitude[9];
+//
+//      for (int i = 4; i < message.get_data_size() - 1; i++)
+//      {
+//        if (data[i] == ',')
+//        {
+//          comma = i + 1;
+//          break;
+//        }
+//        latitude[i] = data[i];
+//      }
+//
+//      char longitude[8];
+//
+//      for (int i = comma; i < message.get_data_size() - 1; i++)
+//      {
+//        latitude[i - comma] = data[i];
+//      }
+//
+//      coor_other_boat.latitude = atof(latitude);
+//      coor_other_boat.longitude = atof(longitude);
+//      state_event.set(E_NEW_GPS_DATA);
 
       break;
     }
